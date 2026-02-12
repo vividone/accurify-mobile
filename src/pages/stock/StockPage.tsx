@@ -70,7 +70,7 @@ export function StockPage() {
     await queryClient.invalidateQueries({ queryKey: ['stock'] });
   }, [queryClient]);
 
-  const { handlers, PullIndicator } = usePullToRefresh({ onRefresh: handleRefresh });
+  const { containerRef, PullIndicator } = usePullToRefresh({ onRefresh: handleRefresh });
 
   // Movement form state
   const [movProductId, setMovProductId] = useState('');
@@ -114,7 +114,7 @@ export function StockPage() {
           </button>
         }
       />
-      <div className="page-content" {...handlers}>
+      <div className="page-content" ref={containerRef}>
         <PullIndicator />
 
         {/* Summary */}

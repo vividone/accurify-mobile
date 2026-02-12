@@ -57,7 +57,7 @@ export function OrderDetailPage() {
     await queryClient.invalidateQueries({ queryKey: ['orders', id] });
   }, [queryClient, id]);
 
-  const { handlers, PullIndicator } = usePullToRefresh({ onRefresh: handleRefresh });
+  const { containerRef, PullIndicator } = usePullToRefresh({ onRefresh: handleRefresh });
 
   const handleAction = async (action: string) => {
     if (!order) return;
@@ -110,7 +110,7 @@ export function OrderDetailPage() {
   return (
     <>
       <PageHeader title={order.orderNumber} backTo="/app/orders" />
-      <div className="page-content space-y-4" {...handlers}>
+      <div className="page-content space-y-4" ref={containerRef}>
         <PullIndicator />
 
         {/* Status + source */}

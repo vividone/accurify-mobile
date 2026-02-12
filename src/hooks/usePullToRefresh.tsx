@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 
 interface UsePullToRefreshOptions {
   onRefresh: () => Promise<void>;
@@ -9,12 +9,24 @@ interface UsePullToRefreshOptions {
 interface UsePullToRefreshReturn {
   isRefreshing: boolean;
   pullDistance: number;
-  handlers: {
-    onTouchStart: (e: React.TouchEvent) => void;
-    onTouchMove: (e: React.TouchEvent) => void;
-    onTouchEnd: () => void;
-  };
+  containerRef: React.RefObject<HTMLDivElement>;
   PullIndicator: React.FC;
+}
+
+/**
+ * Find the nearest scrollable ancestor of an element.
+ * This walks up the DOM tree until it finds an element with overflow-y: auto or scroll.
+ */
+function findScrollParent(el: HTMLElement | null): HTMLElement | null {
+  let current = el?.parentElement ?? null;
+  while (current) {
+    const style = getComputedStyle(current);
+    if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
+      return current;
+    }
+    current = current.parentElement;
+  }
+  return null;
 }
 
 export function usePullToRefresh({
@@ -24,58 +36,108 @@ export function usePullToRefresh({
 }: UsePullToRefreshOptions): UsePullToRefreshReturn {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
   const startY = useRef(0);
   const pulling = useRef(false);
+  const scrollParent = useRef<HTMLElement | null>(null);
+  const isRefreshingRef = useRef(false);
+  const pullDistanceRef = useRef(0);
+  const onRefreshRef = useRef(onRefresh);
 
-  const onTouchStart = useCallback(
-    (e: React.TouchEvent) => {
-      if (isRefreshing) return;
-      const el = e.currentTarget as HTMLElement;
-      if (el.scrollTop <= 0) {
+  // Keep refs in sync
+  onRefreshRef.current = onRefresh;
+  isRefreshingRef.current = isRefreshing;
+  pullDistanceRef.current = pullDistance;
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    // Find and cache the scroll parent (the <main> element)
+    scrollParent.current = findScrollParent(el);
+
+    // Add overscroll-behavior to prevent browser pull-to-refresh
+    if (scrollParent.current) {
+      scrollParent.current.style.overscrollBehaviorY = 'none';
+    }
+
+    function handleTouchStart(e: TouchEvent) {
+      if (isRefreshingRef.current) return;
+
+      // Check if the scroll parent is at the top
+      const sp = scrollParent.current;
+      const scrollTop = sp ? sp.scrollTop : 0;
+
+      if (scrollTop <= 1) {
         startY.current = e.touches[0].clientY;
         pulling.current = true;
       }
-    },
-    [isRefreshing]
-  );
-
-  const onTouchMove = useCallback(
-    (e: React.TouchEvent) => {
-      if (!pulling.current || isRefreshing) return;
-      const delta = e.touches[0].clientY - startY.current;
-      if (delta > 0) {
-        setPullDistance(Math.min(delta * 0.5, maxPull));
-      } else {
-        pulling.current = false;
-        setPullDistance(0);
-      }
-    },
-    [isRefreshing, maxPull]
-  );
-
-  const onTouchEnd = useCallback(async () => {
-    if (!pulling.current || isRefreshing) return;
-    pulling.current = false;
-    if (pullDistance >= threshold) {
-      setIsRefreshing(true);
-      setPullDistance(threshold);
-      try {
-        await onRefresh();
-      } finally {
-        setIsRefreshing(false);
-        setPullDistance(0);
-      }
-    } else {
-      setPullDistance(0);
     }
-  }, [pullDistance, threshold, isRefreshing, onRefresh]);
 
-  const PullIndicator: React.FC = () => {
+    function handleTouchMove(e: TouchEvent) {
+      if (!pulling.current || isRefreshingRef.current) return;
+
+      const delta = e.touches[0].clientY - startY.current;
+
+      if (delta > 0) {
+        // Pulling down — prevent the browser from scrolling/bouncing
+        e.preventDefault();
+        const distance = Math.min(delta * 0.5, maxPull);
+        pullDistanceRef.current = distance;
+        setPullDistance(distance);
+      } else {
+        // Scrolling up — let the browser handle it
+        pulling.current = false;
+        pullDistanceRef.current = 0;
+        setPullDistance(0);
+      }
+    }
+
+    function handleTouchEnd() {
+      if (!pulling.current || isRefreshingRef.current) return;
+      pulling.current = false;
+
+      const dist = pullDistanceRef.current;
+
+      if (dist >= threshold) {
+        isRefreshingRef.current = true;
+        setIsRefreshing(true);
+        setPullDistance(threshold);
+        pullDistanceRef.current = threshold;
+
+        onRefreshRef.current().finally(() => {
+          isRefreshingRef.current = false;
+          setIsRefreshing(false);
+          setPullDistance(0);
+          pullDistanceRef.current = 0;
+        });
+      } else {
+        setPullDistance(0);
+        pullDistanceRef.current = 0;
+      }
+    }
+
+    // Use non-passive listeners so we can call preventDefault during pull
+    el.addEventListener('touchstart', handleTouchStart, { passive: true });
+    el.addEventListener('touchmove', handleTouchMove, { passive: false });
+    el.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+    return () => {
+      el.removeEventListener('touchstart', handleTouchStart);
+      el.removeEventListener('touchmove', handleTouchMove);
+      el.removeEventListener('touchend', handleTouchEnd);
+      if (scrollParent.current) {
+        scrollParent.current.style.overscrollBehaviorY = '';
+      }
+    };
+  }, [threshold, maxPull]);
+
+  const PullIndicator: React.FC = useCallback(() => {
     if (pullDistance === 0 && !isRefreshing) return null;
     const progress = Math.min(pullDistance / threshold, 1);
     return (
       <div
-        className="flex items-center justify-center overflow-hidden transition-[height] duration-200"
+        className="flex items-center justify-center overflow-hidden"
         style={{ height: pullDistance > 0 ? pullDistance : isRefreshing ? threshold : 0 }}
       >
         <div
@@ -86,12 +148,12 @@ export function usePullToRefresh({
         />
       </div>
     );
-  };
+  }, [pullDistance, isRefreshing, threshold]);
 
   return {
     isRefreshing,
     pullDistance,
-    handlers: { onTouchStart, onTouchMove, onTouchEnd },
+    containerRef,
     PullIndicator,
   };
 }

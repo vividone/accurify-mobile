@@ -43,7 +43,7 @@ export function ProductDetailPage() {
     await queryClient.invalidateQueries({ queryKey: ['stock'] });
   }, [queryClient]);
 
-  const { handlers, PullIndicator } = usePullToRefresh({ onRefresh: handleRefresh });
+  const { containerRef, PullIndicator } = usePullToRefresh({ onRefresh: handleRefresh });
 
   const handleRecordSale = async () => {
     if (!product) return;
@@ -90,7 +90,7 @@ export function ProductDetailPage() {
   return (
     <>
       <PageHeader title={product.name} backTo="/app/products" />
-      <div className="page-content space-y-4" {...handlers}>
+      <div className="page-content space-y-4" ref={containerRef}>
         <PullIndicator />
 
         {/* Product header */}

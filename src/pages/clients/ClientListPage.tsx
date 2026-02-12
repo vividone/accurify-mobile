@@ -19,12 +19,12 @@ export function ClientListPage() {
     await queryClient.invalidateQueries({ queryKey: ['clients'] });
   }, [queryClient]);
 
-  const { handlers, PullIndicator } = usePullToRefresh({ onRefresh: handleRefresh });
+  const { containerRef, PullIndicator } = usePullToRefresh({ onRefresh: handleRefresh });
 
   return (
     <>
       <PageHeader title="Clients" backTo="/app/dashboard" />
-      <div className="page-content" {...handlers}>
+      <div className="page-content" ref={containerRef}>
         <PullIndicator />
         {/* Search */}
         <div className="relative mb-4">

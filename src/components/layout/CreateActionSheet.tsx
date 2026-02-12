@@ -6,6 +6,8 @@ import {
   ClipboardDocumentListIcon,
   CubeIcon,
   ShoppingCartIcon,
+  UserPlusIcon,
+  BanknotesIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useUIStore } from '@/store/ui.store';
@@ -37,6 +39,24 @@ export function CreateActionSheet() {
         onClick: () => {
           setOpen(false);
           navigate('/app/bills/new');
+        },
+      },
+      {
+        label: 'New Client',
+        description: 'Add a new client to your business',
+        icon: UserPlusIcon,
+        onClick: () => {
+          setOpen(false);
+          navigate('/app/clients/new');
+        },
+      },
+      {
+        label: 'New Transaction',
+        description: 'Record an income or expense',
+        icon: BanknotesIcon,
+        onClick: () => {
+          setOpen(false);
+          navigate('/app/transactions/new');
         },
       },
     ];
