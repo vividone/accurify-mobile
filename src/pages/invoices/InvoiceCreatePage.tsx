@@ -9,7 +9,9 @@ import { Card } from '@/components/ui/Card';
 import { formatCurrency } from '@/utils/currency';
 import { getTodayString, getDefaultDueDate } from '@/utils/date';
 import { useUIStore } from '@/store/ui.store';
+import { InvoiceType } from '@/types/enums';
 import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+import clsx from 'clsx';
 
 const lineItemSchema = z.object({
   description: z.string().min(1, 'Required'),
@@ -35,6 +37,8 @@ export function InvoiceCreatePage() {
   const clients = clientsData?.content ?? [];
   const showNotification = useUIStore((s) => s.showNotification);
   const [sending, setSending] = useState(false);
+  const [invoiceType, setInvoiceType] = useState<InvoiceType>(InvoiceType.STANDARD);
+  const isProforma = invoiceType === InvoiceType.PROFORMA;
 
   const {
     register,
@@ -75,6 +79,7 @@ export function InvoiceCreatePage() {
         dueDate: data.dueDate,
         items: data.items,
         notes: data.notes,
+        type: invoiceType,
       });
 
       if (shouldSend && invoice?.id) {
@@ -94,9 +99,45 @@ export function InvoiceCreatePage() {
 
   return (
     <>
-      <PageHeader title="New Invoice" backTo="/app/invoices" />
+      <PageHeader title={isProforma ? 'New Proforma Invoice' : 'New Invoice'} backTo="/app/invoices" />
       <div className="page-content">
         <form className="space-y-4" onSubmit={handleSubmit((d) => onSubmit(d, false))}>
+          {/* Invoice type toggle */}
+          <Card>
+            <p className="text-label-01 text-gray-70 mb-2">Invoice Type</p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setInvoiceType(InvoiceType.STANDARD)}
+                className={clsx(
+                  'flex-1 py-2 rounded-lg text-body-01 font-medium transition-colors',
+                  !isProforma
+                    ? 'bg-primary text-white'
+                    : 'bg-gray-10 text-gray-60 border border-gray-20'
+                )}
+              >
+                Standard
+              </button>
+              <button
+                type="button"
+                onClick={() => setInvoiceType(InvoiceType.PROFORMA)}
+                className={clsx(
+                  'flex-1 py-2 rounded-lg text-body-01 font-medium transition-colors',
+                  isProforma
+                    ? 'bg-primary text-white'
+                    : 'bg-gray-10 text-gray-60 border border-gray-20'
+                )}
+              >
+                Proforma
+              </button>
+            </div>
+            {isProforma && (
+              <p className="mt-2 text-helper-01 text-gray-50">
+                Proforma invoices have no accounting impact and can be converted to standard invoices later.
+              </p>
+            )}
+          </Card>
+
           {/* Client selector */}
           <Card>
             <label className="block text-label-01 text-gray-70 mb-1.5">

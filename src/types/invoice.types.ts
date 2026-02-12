@@ -1,4 +1,4 @@
-import type { InvoiceStatus } from './enums';
+import type { InvoiceStatus, InvoiceType } from './enums';
 import type { Client } from './client.types';
 
 export interface InvoiceItem {
@@ -12,6 +12,7 @@ export interface InvoiceItem {
 export interface Invoice {
   id: string;
   invoiceNumber: string;
+  type: InvoiceType;
   status: InvoiceStatus;
   client: Client;
   invoiceDate: string;
@@ -29,6 +30,8 @@ export interface Invoice {
   paidAt?: string;
   createdAt: string;
   updatedAt: string;
+  // Proforma conversion tracking
+  convertedFromId?: string;
   // Payment link fields (Accurify Pay)
   paymentToken?: string;
   paymentLinkEnabled?: boolean;
@@ -58,6 +61,8 @@ export interface InvoiceRequest {
   whtRate?: number; // Common rates: 5% (contracts), 10% (professional services)
   // Accurify Pay - enable online payment for this invoice
   enableAccurifyPay?: boolean;
+  // Invoice type
+  type?: InvoiceType;
 }
 
 export interface MarkPaidRequest {
@@ -66,6 +71,7 @@ export interface MarkPaidRequest {
 
 export interface InvoiceFilters {
   status?: InvoiceStatus;
+  type?: InvoiceType;
   startDate?: string;
   endDate?: string;
   search?: string;
