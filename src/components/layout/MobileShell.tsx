@@ -6,11 +6,13 @@ import { MoreMenu } from './MoreMenu';
 import { Toast } from '@/components/ui/Toast';
 import { UpgradeModal } from '@/components/ui/UpgradeModal';
 import { InstallBanner } from '@/components/ui/InstallBanner';
+import { UpdateBanner } from '@/components/ui/UpdateBanner';
 
 export function MobileShell() {
   return (
     <div className="flex flex-col h-full">
       <MobileHeader />
+      <UpdateBanner />
       <InstallBanner />
       <main className="flex-1 overflow-y-auto bg-gray-10">
         <Outlet />
