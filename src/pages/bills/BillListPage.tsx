@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBills } from '@/queries';
 import { Card } from '@/components/ui/Card';
@@ -7,6 +7,8 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 import { formatCurrency } from '@/utils/currency';
 import { formatDate } from '@/utils/date';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { useQueryClient } from '@tanstack/react-query';
 import { BillStatus } from '@/types';
 import { ClipboardDocumentListIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
@@ -21,14 +23,22 @@ const statusFilters: { label: string; value: BillStatus | 'ALL' }[] = [
 
 export function BillListPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [activeFilter, setActiveFilter] = useState<BillStatus | 'ALL'>('ALL');
   const status = activeFilter === 'ALL' ? undefined : activeFilter;
 
   const { data: billsData, isLoading } = useBills(0, 50, status);
   const bills = billsData?.content ?? [];
 
+  const handleRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ['bills'] });
+  }, [queryClient]);
+
+  const { handlers, PullIndicator } = usePullToRefresh({ onRefresh: handleRefresh });
+
   return (
-    <div className="page-content">
+    <div className="page-content" {...handlers}>
+      <PullIndicator />
       {/* Search bar */}
       <div className="relative mb-4">
         <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-40" />

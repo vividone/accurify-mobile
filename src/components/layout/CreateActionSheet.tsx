@@ -1,34 +1,71 @@
-import { Fragment } from 'react';
+import { Fragment, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, Transition } from '@headlessui/react';
-import { DocumentTextIcon, ClipboardDocumentListIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import {
+  DocumentTextIcon,
+  ClipboardDocumentListIcon,
+  CubeIcon,
+  ShoppingCartIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import { useUIStore } from '@/store/ui.store';
+import { useBusinessStore } from '@/store/business.store';
+import { BusinessType } from '@/types/enums';
 
 export function CreateActionSheet() {
   const navigate = useNavigate();
   const open = useUIStore((s) => s.createSheetOpen);
   const setOpen = useUIStore((s) => s.setCreateSheetOpen);
+  const business = useBusinessStore((s) => s.business);
+  const isGoodsBusiness = business?.type === BusinessType.GOODS;
 
-  const actions = [
-    {
-      label: 'New Invoice',
-      description: 'Create and send an invoice to a client',
-      icon: DocumentTextIcon,
-      onClick: () => {
-        setOpen(false);
-        navigate('/app/invoices/new');
+  const actions = useMemo(() => {
+    const items = [
+      {
+        label: 'New Invoice',
+        description: 'Create and send an invoice to a client',
+        icon: DocumentTextIcon,
+        onClick: () => {
+          setOpen(false);
+          navigate('/app/invoices/new');
+        },
       },
-    },
-    {
-      label: 'New Bill',
-      description: 'Record a bill from a supplier',
-      icon: ClipboardDocumentListIcon,
-      onClick: () => {
-        setOpen(false);
-        navigate('/app/bills/new');
+      {
+        label: 'New Bill',
+        description: 'Record a bill from a supplier',
+        icon: ClipboardDocumentListIcon,
+        onClick: () => {
+          setOpen(false);
+          navigate('/app/bills/new');
+        },
       },
-    },
-  ];
+    ];
+
+    if (isGoodsBusiness) {
+      items.push(
+        {
+          label: 'New Product',
+          description: 'Add a product to your inventory',
+          icon: CubeIcon,
+          onClick: () => {
+            setOpen(false);
+            navigate('/app/products/new');
+          },
+        },
+        {
+          label: 'New POS Sale',
+          description: 'Quick sale from point of sale',
+          icon: ShoppingCartIcon,
+          onClick: () => {
+            setOpen(false);
+            navigate('/app/pos');
+          },
+        },
+      );
+    }
+
+    return items;
+  }, [isGoodsBusiness, navigate, setOpen]);
 
   return (
     <Transition show={open} as={Fragment}>

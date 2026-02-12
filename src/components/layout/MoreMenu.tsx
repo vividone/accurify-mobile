@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { Fragment, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, Transition } from '@headlessui/react';
 import {
@@ -6,44 +6,96 @@ import {
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
   ComputerDesktopIcon,
+  CubeIcon,
+  ShoppingBagIcon,
+  ArchiveBoxIcon,
+  ShoppingCartIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useUIStore } from '@/store/ui.store';
 import { useAuthStore } from '@/store/auth.store';
+import { useBusinessStore } from '@/store/business.store';
+import { BusinessType } from '@/types/enums';
 
 export function MoreMenu() {
   const navigate = useNavigate();
   const open = useUIStore((s) => s.moreMenuOpen);
   const setOpen = useUIStore((s) => s.setMoreMenuOpen);
   const logoutAsync = useAuthStore((s) => s.logoutAsync);
+  const business = useBusinessStore((s) => s.business);
+  const isGoodsBusiness = business?.type === BusinessType.GOODS;
 
-  const menuItems = [
-    {
-      label: 'Clients',
-      icon: UserGroupIcon,
-      onClick: () => {
-        setOpen(false);
-        navigate('/app/clients');
+  const menuItems = useMemo(() => {
+    const items: { label: string; icon: typeof UserGroupIcon; onClick: () => void }[] = [
+      {
+        label: 'Clients',
+        icon: UserGroupIcon,
+        onClick: () => {
+          setOpen(false);
+          navigate('/app/clients');
+        },
       },
-    },
-    {
-      label: 'Settings',
-      icon: Cog6ToothIcon,
-      onClick: () => {
-        setOpen(false);
-        navigate('/app/settings');
+    ];
+
+    if (isGoodsBusiness) {
+      items.push(
+        {
+          label: 'Products',
+          icon: CubeIcon,
+          onClick: () => {
+            setOpen(false);
+            navigate('/app/products');
+          },
+        },
+        {
+          label: 'Point of Sale',
+          icon: ShoppingCartIcon,
+          onClick: () => {
+            setOpen(false);
+            navigate('/app/pos');
+          },
+        },
+        {
+          label: 'Orders',
+          icon: ShoppingBagIcon,
+          onClick: () => {
+            setOpen(false);
+            navigate('/app/orders');
+          },
+        },
+        {
+          label: 'Inventory',
+          icon: ArchiveBoxIcon,
+          onClick: () => {
+            setOpen(false);
+            navigate('/app/stock');
+          },
+        },
+      );
+    }
+
+    items.push(
+      {
+        label: 'Settings',
+        icon: Cog6ToothIcon,
+        onClick: () => {
+          setOpen(false);
+          navigate('/app/settings');
+        },
       },
-    },
-    {
-      label: 'Desktop Version',
-      icon: ComputerDesktopIcon,
-      onClick: () => {
-        setOpen(false);
-        const webUrl = import.meta.env.VITE_WEB_APP_URL || 'https://app.accurify.co';
-        window.location.href = webUrl;
+      {
+        label: 'Desktop Version',
+        icon: ComputerDesktopIcon,
+        onClick: () => {
+          setOpen(false);
+          const webUrl = import.meta.env.VITE_WEB_APP_URL || 'https://app.accurify.co';
+          window.location.href = webUrl;
+        },
       },
-    },
-  ];
+    );
+
+    return items;
+  }, [isGoodsBusiness, navigate, setOpen]);
 
   const handleLogout = async () => {
     setOpen(false);

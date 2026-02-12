@@ -1,9 +1,14 @@
+import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDashboard } from '@/queries';
 import { Card } from '@/components/ui/Card';
 import { DashboardSkeleton } from '@/components/ui/Skeleton';
 import { formatCurrency } from '@/utils/currency';
 import { formatRelative } from '@/utils/date';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { useQueryClient } from '@tanstack/react-query';
+import { useBusinessStore } from '@/store/business.store';
+import { BusinessType } from '@/types/enums';
 import {
   BanknotesIcon,
   ClockIcon,
@@ -12,11 +17,22 @@ import {
   DocumentTextIcon,
   ClipboardDocumentListIcon,
   UserGroupIcon,
+  CubeIcon,
+  ShoppingCartIcon,
 } from '@heroicons/react/24/outline';
 
 export function DashboardPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: dashboard, isLoading } = useDashboard();
+  const business = useBusinessStore((s) => s.business);
+  const isGoodsBusiness = business?.type === BusinessType.GOODS;
+
+  const handleRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+  }, [queryClient]);
+
+  const { handlers, PullIndicator } = usePullToRefresh({ onRefresh: handleRefresh });
 
   if (isLoading || !dashboard) {
     return <DashboardSkeleton />;
@@ -67,15 +83,31 @@ export function DashboardPage() {
       icon: ClipboardDocumentListIcon,
       onClick: () => navigate('/app/bills/new'),
     },
-    {
-      label: 'Clients',
-      icon: UserGroupIcon,
-      onClick: () => navigate('/app/clients'),
-    },
+    ...(isGoodsBusiness
+      ? [
+          {
+            label: 'POS Sale',
+            icon: ShoppingCartIcon,
+            onClick: () => navigate('/app/pos'),
+          },
+          {
+            label: 'Products',
+            icon: CubeIcon,
+            onClick: () => navigate('/app/products'),
+          },
+        ]
+      : [
+          {
+            label: 'Clients',
+            icon: UserGroupIcon,
+            onClick: () => navigate('/app/clients'),
+          },
+        ]),
   ];
 
   return (
-    <div className="page-content space-y-5">
+    <div className="page-content space-y-5" {...handlers}>
+      <PullIndicator />
       {/* Summary Cards */}
       <div className="grid grid-cols-2 gap-3">
         {summaryCards.map((card) => (

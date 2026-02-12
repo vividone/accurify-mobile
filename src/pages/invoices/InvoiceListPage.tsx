@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useInvoices } from '@/queries';
 import { Card } from '@/components/ui/Card';
@@ -7,6 +7,8 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 import { formatCurrency } from '@/utils/currency';
 import { formatDate } from '@/utils/date';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { useQueryClient } from '@tanstack/react-query';
 import { InvoiceStatus, InvoiceType } from '@/types';
 import { DocumentTextIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
@@ -29,6 +31,7 @@ const typeFilters: { label: string; value: InvoiceType | 'ALL' }[] = [
 
 export function InvoiceListPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [activeFilter, setActiveFilter] = useState<InvoiceStatus | 'ALL'>('ALL');
   const [activeTypeFilter, setActiveTypeFilter] = useState<InvoiceType | 'ALL'>('ALL');
   const [page] = useState(0);
@@ -41,8 +44,15 @@ export function InvoiceListPage() {
   });
   const invoices = invoicesData?.content ?? [];
 
+  const handleRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ['invoices'] });
+  }, [queryClient]);
+
+  const { handlers, PullIndicator } = usePullToRefresh({ onRefresh: handleRefresh });
+
   return (
-    <div className="page-content">
+    <div className="page-content" {...handlers}>
+      <PullIndicator />
       {/* Search bar */}
       <div className="relative mb-4">
         <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-40" />

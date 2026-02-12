@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useCreateInvoice, useSendInvoice, useClients } from '@/queries';
+import { useCreateInvoice, useSendInvoice, useClients, useProducts } from '@/queries';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card } from '@/components/ui/Card';
 import { formatCurrency } from '@/utils/currency';
 import { getTodayString, getDefaultDueDate } from '@/utils/date';
 import { useUIStore } from '@/store/ui.store';
-import { InvoiceType } from '@/types/enums';
+import { useBusinessStore } from '@/store/business.store';
+import { InvoiceType, BusinessType } from '@/types/enums';
 import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 
@@ -36,6 +37,10 @@ export function InvoiceCreatePage() {
   const { data: clientsData } = useClients(0, 100);
   const clients = clientsData?.content ?? [];
   const showNotification = useUIStore((s) => s.showNotification);
+  const business = useBusinessStore((s) => s.business);
+  const isGoodsBusiness = business?.type === BusinessType.GOODS;
+  const { data: productsData } = useProducts(0, 200, { active: true });
+  const products = productsData?.content ?? [];
   const [sending, setSending] = useState(false);
   const [invoiceType, setInvoiceType] = useState<InvoiceType>(InvoiceType.STANDARD);
   const isProforma = invoiceType === InvoiceType.PROFORMA;
@@ -45,6 +50,7 @@ export function InvoiceCreatePage() {
     control,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceSchema),
@@ -221,6 +227,27 @@ export function InvoiceCreatePage() {
                       </button>
                     )}
                   </div>
+                  {isGoodsBusiness && (
+                    <select
+                      className="w-full h-10 px-3 bg-white border border-gray-30 text-body-01 text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary"
+                      defaultValue=""
+                      onChange={(e) => {
+                        const product = products.find((p) => p.id === e.target.value);
+                        if (product) {
+                          setValue(`items.${index}.description`, product.name, { shouldValidate: true });
+                          setValue(`items.${index}.unitPrice`, product.unitPrice, { shouldValidate: true });
+                        }
+                      }}
+                    >
+                      <option value="">Select a product...</option>
+                      {products.map((product) => (
+                        <option key={product.id} value={product.id}>
+                          {product.name} — {formatCurrency(product.unitPrice)}
+                          {product.stockQuantity > 0 ? ` (${product.stockQuantity} in stock)` : ' (Out of stock)'}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                   <input
                     placeholder="Description"
                     className="w-full h-10 px-3 bg-white border border-gray-30 text-body-01 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-2 focus:ring-primary"
