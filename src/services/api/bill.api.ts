@@ -20,12 +20,7 @@ export const billsApi = {
 
     const response = await apiClient.post<ApiResponse<ParsedBillData>>(
       `${BILLS_BASE}/parse`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
+      formData
     );
     return response.data.data!;
   },
@@ -43,12 +38,7 @@ export const billsApi = {
 
     const response = await apiClient.post<ApiResponse<Bill>>(
       `${BILLS_BASE}/${billId}/document`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
+      formData
     );
     return response.data.data!;
   },

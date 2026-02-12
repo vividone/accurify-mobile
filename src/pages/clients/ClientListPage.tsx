@@ -45,10 +45,14 @@ export function ClientListPage() {
                 onClick={() => navigate(`/app/clients/${client.id}`)}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary-50 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-primary font-semibold text-sm">
-                      {client.name.charAt(0).toUpperCase()}
-                    </span>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden bg-primary-50">
+                    {client.logoUrl ? (
+                      <img src={client.logoUrl} alt={client.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-primary font-semibold text-sm">
+                        {client.name.charAt(0).toUpperCase()}
+                      </span>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-body-01 font-medium text-gray-100 truncate">

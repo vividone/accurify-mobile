@@ -4,6 +4,7 @@ export interface Client {
   email?: string;
   phone?: string;
   address?: string;
+  logoUrl?: string;
   createdAt: string;
 }
 

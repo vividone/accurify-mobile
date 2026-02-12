@@ -33,12 +33,7 @@ export const statementApi = {
 
     const response = await apiClient.post<StatementUploadDetailResponse>(
       `${BASE_URL}/upload`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
+      formData
     );
     return response.data;
   },

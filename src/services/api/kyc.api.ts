@@ -68,12 +68,7 @@ export const kycApi = {
     formData.append('file', file);
     const response = await apiClient.post<ApiResponse<string>>(
       `${KYC_BASE}/business/document`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
+      formData
     );
     return response.data.data!;
   },

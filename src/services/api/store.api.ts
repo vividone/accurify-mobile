@@ -84,12 +84,7 @@ export const storeApi = {
 
     const response = await apiClient.post<ApiResponse<Store>>(
       `${STORE_BASE}/logo`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
+      formData
     );
     return response.data;
   },
@@ -103,12 +98,7 @@ export const storeApi = {
 
     const response = await apiClient.post<ApiResponse<Store>>(
       `${STORE_BASE}/banner`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
+      formData
     );
     return response.data;
   },

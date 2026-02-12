@@ -57,7 +57,6 @@ export const importApi = {
       formData,
       {
         params: { type },
-        headers: { 'Content-Type': 'multipart/form-data' },
       }
     );
     return response.data;
@@ -75,7 +74,6 @@ export const importApi = {
       formData,
       {
         params: { type },
-        headers: { 'Content-Type': 'multipart/form-data' },
       }
     );
     return response.data;

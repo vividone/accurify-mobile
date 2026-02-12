@@ -36,12 +36,7 @@ export const businessApi = {
 
     const response = await apiClient.post<ApiResponse<string>>(
       `${BUSINESS_BASE}/logo`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
+      formData
     );
     return response.data.data!;
   },

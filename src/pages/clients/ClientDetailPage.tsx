@@ -25,10 +25,14 @@ export function ClientDetailPage() {
         {/* Avatar + Name */}
         <Card>
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-primary-50 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-primary font-bold text-xl">
-                {client.name.charAt(0).toUpperCase()}
-              </span>
+            <div className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden bg-primary-50">
+              {client.logoUrl ? (
+                <img src={client.logoUrl} alt={client.name} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-primary font-bold text-xl">
+                  {client.name.charAt(0).toUpperCase()}
+                </span>
+              )}
             </div>
             <div>
               <p className="text-heading-03 text-gray-100">{client.name}</p>

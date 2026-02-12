@@ -56,6 +56,18 @@ export const clientsApi = {
     return response.data.data!;
   },
 
+  // Upload client logo
+  uploadLogo: async (id: string, file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await apiClient.post<ApiResponse<string>>(
+      `${CLIENTS_BASE}/${id}/logo`,
+      formData
+    );
+    return response.data.data!;
+  },
+
   // Delete client
   delete: async (id: string): Promise<void> => {
     await apiClient.delete(`${CLIENTS_BASE}/${id}`);

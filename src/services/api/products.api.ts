@@ -128,12 +128,7 @@ export const productsApi = {
 
     const response = await apiClient.post<ApiResponse<Product>>(
       `${PRODUCTS_BASE}/${productId}/image`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
+      formData
     );
     return response.data.data!;
   },
