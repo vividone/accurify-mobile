@@ -22,7 +22,6 @@ import {
   CubeIcon,
   TagIcon,
   ChartBarIcon,
-  ClockIcon,
 } from '@heroicons/react/24/outline';
 
 export function ProductDetailPage() {

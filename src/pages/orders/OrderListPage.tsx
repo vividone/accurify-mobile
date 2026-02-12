@@ -12,11 +12,10 @@ import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   OrderStatus,
-  OrderPaymentStatus,
   ORDER_STATUS_META,
   ORDER_SOURCE_META,
 } from '@/types/store.types';
-import { ShoppingBagIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { ShoppingBagIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 
 const statusFilters: { label: string; value: OrderStatus | 'ALL' }[] = [
