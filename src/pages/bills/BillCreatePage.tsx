@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,6 +12,9 @@ import { getTodayString, getDefaultDueDate } from '@/utils/date';
 import { BillCategory, BillCategoryLabels } from '@/types/bill.types';
 import { useUIStore } from '@/store/ui.store';
 import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+import clsx from 'clsx';
+
+const DEFAULT_VAT_RATE = 0.075; // 7.5% Nigerian VAT
 
 const lineItemSchema = z.object({
   description: z.string().min(1, 'Required'),
@@ -37,6 +41,7 @@ export function BillCreatePage() {
   const createBill = useCreateBill();
   const { data: suppliers } = useActiveSuppliers();
   const showNotification = useUIStore((s) => s.showNotification);
+  const [applyVat, setApplyVat] = useState(false);
 
   const {
     register,
@@ -65,6 +70,8 @@ export function BillCreatePage() {
     (sum, item) => sum + (item.quantity || 0) * (item.unitPrice || 0),
     0
   );
+  const vatAmount = applyVat ? subtotal * DEFAULT_VAT_RATE : 0;
+  const total = subtotal + vatAmount;
 
   const handleSupplierSelect = (supplierId: string) => {
     const supplier = suppliers?.find((s) => s.id === supplierId);
@@ -85,6 +92,7 @@ export function BillCreatePage() {
         dueDate: data.dueDate || undefined,
         description: data.description || undefined,
         notes: data.notes || undefined,
+        vatRate: applyVat ? DEFAULT_VAT_RATE : 0,
         items: data.items.map((item) => ({
           description: item.description,
           quantity: item.quantity,
@@ -278,9 +286,46 @@ export function BillCreatePage() {
               <PlusIcon className="w-4 h-4" /> Add Item
             </button>
 
-            <div className="border-t border-gray-20 mt-4 pt-3 flex justify-between text-heading-02">
-              <span>Total</span>
-              <span className="tabular-nums">{formatCurrency(subtotal)}</span>
+            <div className="border-t border-gray-20 mt-4 pt-3 space-y-2">
+              <div className="flex justify-between text-body-01">
+                <span className="text-gray-50">Subtotal</span>
+                <span className="tabular-nums text-gray-100">{formatCurrency(subtotal)}</span>
+              </div>
+              {applyVat && (
+                <div className="flex justify-between text-body-01">
+                  <span className="text-gray-50">VAT (7.5%)</span>
+                  <span className="tabular-nums text-gray-100">{formatCurrency(vatAmount)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-heading-02 pt-1 border-t border-gray-20">
+                <span>Total</span>
+                <span className="tabular-nums">{formatCurrency(total)}</span>
+              </div>
+            </div>
+          </Card>
+
+          {/* Tax settings */}
+          <Card>
+            <div className="flex items-center justify-between py-1">
+              <div>
+                <p className="text-body-01 text-gray-100">Apply VAT (Input VAT)</p>
+                <p className="text-helper-01 text-gray-40">7.5% VAT on this bill</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setApplyVat(!applyVat)}
+                className={clsx(
+                  'relative w-11 h-6 rounded-full transition-colors',
+                  applyVat ? 'bg-primary' : 'bg-gray-30'
+                )}
+              >
+                <span
+                  className={clsx(
+                    'absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform',
+                    applyVat && 'translate-x-5'
+                  )}
+                />
+              </button>
             </div>
           </Card>
 
