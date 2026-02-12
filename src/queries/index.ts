@@ -17,3 +17,4 @@ export * from './business.queries';
 export * from './bill.queries';
 export * from './supplier.queries';
 export * from './tax.queries';
+export * from './store.queries';

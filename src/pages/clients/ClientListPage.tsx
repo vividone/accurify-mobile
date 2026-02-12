@@ -1,20 +1,31 @@
+import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useClients } from '@/queries';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { useQueryClient } from '@tanstack/react-query';
 import { UserGroupIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
 export function ClientListPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: clientsData, isLoading } = useClients(0, 100);
   const clients = clientsData?.content ?? [];
+
+  const handleRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ['clients'] });
+  }, [queryClient]);
+
+  const { handlers, PullIndicator } = usePullToRefresh({ onRefresh: handleRefresh });
 
   return (
     <>
       <PageHeader title="Clients" backTo="/app/dashboard" />
-      <div className="page-content">
+      <div className="page-content" {...handlers}>
+        <PullIndicator />
         {/* Search */}
         <div className="relative mb-4">
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-40" />
