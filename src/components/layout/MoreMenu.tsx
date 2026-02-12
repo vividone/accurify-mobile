@@ -6,6 +6,7 @@ import {
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
   ComputerDesktopIcon,
+  QuestionMarkCircleIcon,
   CubeIcon,
   ShoppingBagIcon,
   ArchiveBoxIcon,
@@ -81,6 +82,14 @@ export function MoreMenu() {
         onClick: () => {
           setOpen(false);
           navigate('/app/settings');
+        },
+      },
+      {
+        label: 'Help Center',
+        icon: QuestionMarkCircleIcon,
+        onClick: () => {
+          setOpen(false);
+          navigate('/app/help');
         },
       },
       {

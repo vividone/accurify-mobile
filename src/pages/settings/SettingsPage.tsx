@@ -10,6 +10,7 @@ import {
   ComputerDesktopIcon,
   ArrowRightOnRectangleIcon,
   ArrowDownTrayIcon,
+  QuestionMarkCircleIcon,
   ChevronRightIcon,
 } from '@heroicons/react/24/outline';
 
@@ -68,18 +69,30 @@ export function SettingsPage() {
           </div>
         </Card>
 
-        {/* Desktop Version */}
+        {/* Help Center & Desktop Version */}
         <Card padding={false}>
-          <a
-            href={webUrl}
-            className="flex items-center gap-3 px-4 py-3"
-          >
-            <ComputerDesktopIcon className="w-5 h-5 text-gray-50" />
-            <span className="flex-1 text-body-01 text-gray-100">
-              View Desktop Version
-            </span>
-            <ChevronRightIcon className="w-4 h-4 text-gray-40" />
-          </a>
+          <div className="divide-y divide-gray-10">
+            <button
+              onClick={() => navigate('/app/help')}
+              className="flex items-center gap-3 px-4 py-3 w-full"
+            >
+              <QuestionMarkCircleIcon className="w-5 h-5 text-gray-50" />
+              <span className="flex-1 text-body-01 text-gray-100 text-left">
+                Help Center
+              </span>
+              <ChevronRightIcon className="w-4 h-4 text-gray-40" />
+            </button>
+            <a
+              href={webUrl}
+              className="flex items-center gap-3 px-4 py-3"
+            >
+              <ComputerDesktopIcon className="w-5 h-5 text-gray-50" />
+              <span className="flex-1 text-body-01 text-gray-100">
+                View Desktop Version
+              </span>
+              <ChevronRightIcon className="w-4 h-4 text-gray-40" />
+            </a>
+          </div>
         </Card>
 
         {/* Install App */}
