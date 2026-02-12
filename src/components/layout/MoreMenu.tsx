@@ -23,6 +23,17 @@ import { useAuthStore } from '@/store/auth.store';
 import { useBusinessStore } from '@/store/business.store';
 import { BusinessType } from '@/types/enums';
 
+interface MenuItem {
+  label: string;
+  icon: typeof UserGroupIcon;
+  onClick: () => void;
+}
+
+interface MenuSection {
+  title: string;
+  items: MenuItem[];
+}
+
 export function MoreMenu() {
   const navigate = useNavigate();
   const open = useUIStore((s) => s.moreMenuOpen);
@@ -31,127 +42,66 @@ export function MoreMenu() {
   const business = useBusinessStore((s) => s.business);
   const isGoodsBusiness = business?.type === BusinessType.GOODS;
 
-  const menuItems = useMemo(() => {
-    const items: { label: string; icon: typeof UserGroupIcon; onClick: () => void }[] = [
-      {
-        label: 'Clients',
-        icon: UserGroupIcon,
-        onClick: () => {
-          setOpen(false);
-          navigate('/app/clients');
-        },
-      },
-    ];
+  const go = (path: string) => {
+    setOpen(false);
+    navigate(path);
+  };
 
-    items.push(
-      {
-        label: 'Transactions',
-        icon: BanknotesIcon,
-        onClick: () => {
-          setOpen(false);
-          navigate('/app/transactions');
-        },
-      },
-      {
-        label: 'Income Statement',
-        icon: DocumentChartBarIcon,
-        onClick: () => {
-          setOpen(false);
-          navigate('/app/income-statement');
-        },
-      },
-      {
-        label: 'Tax Overview',
-        icon: ReceiptPercentIcon,
-        onClick: () => {
-          setOpen(false);
-          navigate('/app/tax-overview');
-        },
-      },
-    );
+  const sections = useMemo(() => {
+    const result: MenuSection[] = [];
 
+    // Records — available for all business types
+    result.push({
+      title: 'Records',
+      items: [
+        { label: 'Clients', icon: UserGroupIcon, onClick: () => go('/app/clients') },
+        { label: 'Transactions', icon: BanknotesIcon, onClick: () => go('/app/transactions') },
+      ],
+    });
+
+    // Reports — available for all business types
+    result.push({
+      title: 'Reports',
+      items: [
+        { label: 'Income Statement', icon: DocumentChartBarIcon, onClick: () => go('/app/income-statement') },
+        { label: 'Tax Overview', icon: ReceiptPercentIcon, onClick: () => go('/app/tax-overview') },
+      ],
+    });
+
+    // Inventory & Store — GOODS only
     if (isGoodsBusiness) {
-      items.push(
-        {
-          label: 'Products',
-          icon: CubeIcon,
-          onClick: () => {
-            setOpen(false);
-            navigate('/app/products');
-          },
-        },
-        {
-          label: 'Point of Sale',
-          icon: ShoppingCartIcon,
-          onClick: () => {
-            setOpen(false);
-            navigate('/app/pos');
-          },
-        },
-        {
-          label: 'Orders',
-          icon: ShoppingBagIcon,
-          onClick: () => {
-            setOpen(false);
-            navigate('/app/orders');
-          },
-        },
-        {
-          label: 'Inventory',
-          icon: ArchiveBoxIcon,
-          onClick: () => {
-            setOpen(false);
-            navigate('/app/stock');
-          },
-        },
-      );
+      result.push({
+        title: 'Inventory & Store',
+        items: [
+          { label: 'Products', icon: CubeIcon, onClick: () => go('/app/products') },
+          { label: 'Inventory', icon: ArchiveBoxIcon, onClick: () => go('/app/stock') },
+          { label: 'Point of Sale', icon: ShoppingCartIcon, onClick: () => go('/app/pos') },
+          { label: 'Orders', icon: ShoppingBagIcon, onClick: () => go('/app/orders') },
+        ],
+      });
     }
 
-    items.push(
-      {
-        label: 'Payment Settings',
-        icon: CreditCardIcon,
-        onClick: () => {
-          setOpen(false);
-          navigate('/app/payment-settings');
+    // Account & Billing — available for all business types
+    result.push({
+      title: 'Account',
+      items: [
+        { label: 'Payment Settings', icon: CreditCardIcon, onClick: () => go('/app/payment-settings') },
+        { label: 'Billing & Subscription', icon: SparklesIcon, onClick: () => go('/app/billing') },
+        { label: 'Settings', icon: Cog6ToothIcon, onClick: () => go('/app/settings') },
+        { label: 'Help Center', icon: QuestionMarkCircleIcon, onClick: () => go('/app/help') },
+        {
+          label: 'Desktop Version',
+          icon: ComputerDesktopIcon,
+          onClick: () => {
+            setOpen(false);
+            const webUrl = import.meta.env.VITE_WEB_APP_URL || 'https://app.accurify.co';
+            window.location.href = webUrl;
+          },
         },
-      },
-      {
-        label: 'Billing & Subscription',
-        icon: SparklesIcon,
-        onClick: () => {
-          setOpen(false);
-          navigate('/app/billing');
-        },
-      },
-      {
-        label: 'Settings',
-        icon: Cog6ToothIcon,
-        onClick: () => {
-          setOpen(false);
-          navigate('/app/settings');
-        },
-      },
-      {
-        label: 'Help Center',
-        icon: QuestionMarkCircleIcon,
-        onClick: () => {
-          setOpen(false);
-          navigate('/app/help');
-        },
-      },
-      {
-        label: 'Desktop Version',
-        icon: ComputerDesktopIcon,
-        onClick: () => {
-          setOpen(false);
-          const webUrl = import.meta.env.VITE_WEB_APP_URL || 'https://app.accurify.co';
-          window.location.href = webUrl;
-        },
-      },
-    );
+      ],
+    });
 
-    return items;
+    return result;
   }, [isGoodsBusiness, navigate, setOpen]);
 
   const handleLogout = async () => {
@@ -186,10 +136,10 @@ export function MoreMenu() {
             leaveTo="translate-y-full"
           >
             <Dialog.Panel
-              className="bg-white rounded-t-2xl"
+              className="bg-white rounded-t-2xl max-h-[80vh] flex flex-col"
               style={{ paddingBottom: 'calc(var(--safe-area-bottom) + 1rem)' }}
             >
-              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-20">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-20 flex-shrink-0">
                 <Dialog.Title className="text-heading-02 text-gray-100">
                   More
                 </Dialog.Title>
@@ -201,18 +151,26 @@ export function MoreMenu() {
                 </button>
               </div>
 
-              <div className="p-4 space-y-1">
-                {menuItems.map((item) => (
-                  <button
-                    key={item.label}
-                    onClick={item.onClick}
-                    className="flex items-center gap-4 w-full p-3 rounded-lg active:bg-gray-10 transition-colors text-left"
-                  >
-                    <item.icon className="w-5 h-5 text-gray-60" />
-                    <span className="text-body-01 text-gray-100">
-                      {item.label}
-                    </span>
-                  </button>
+              <div className="overflow-y-auto flex-1 px-4 pt-2 pb-2">
+                {sections.map((section, index) => (
+                  <div key={section.title}>
+                    {index > 0 && <div className="border-t border-gray-20 my-2" />}
+                    <p className="text-helper-01 text-gray-40 font-medium uppercase tracking-wider px-3 py-2">
+                      {section.title}
+                    </p>
+                    {section.items.map((item) => (
+                      <button
+                        key={item.label}
+                        onClick={item.onClick}
+                        className="flex items-center gap-4 w-full p-3 rounded-lg active:bg-gray-10 transition-colors text-left"
+                      >
+                        <item.icon className="w-5 h-5 text-gray-60" />
+                        <span className="text-body-01 text-gray-100">
+                          {item.label}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 ))}
 
                 <div className="border-t border-gray-20 mt-2 pt-2">
