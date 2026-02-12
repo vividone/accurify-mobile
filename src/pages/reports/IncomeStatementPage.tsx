@@ -8,6 +8,7 @@ import { formatCurrency } from '@/utils/currency';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useQueryClient } from '@tanstack/react-query';
 import { format, startOfYear, endOfYear } from 'date-fns';
+import { ExclamationTriangleIcon, DocumentChartBarIcon } from '@heroicons/react/24/outline';
 import type { IncomeStatementSection } from '@/queries/gl.queries';
 
 function formatDateRange(date: Date): string {
@@ -50,13 +51,20 @@ export function IncomeStatementPage() {
   const [startDate, setStartDate] = useState(formatDateRange(startOfYear(now)));
   const [endDate, setEndDate] = useState(formatDateRange(endOfYear(now)));
 
-  const { data: report, isLoading } = useIncomeStatement(startDate, endDate);
+  const { data: report, isLoading, isError, error } = useIncomeStatement(startDate, endDate);
 
   const handleRefresh = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ['gl'] });
   }, [queryClient]);
 
   const { containerRef, PullIndicator } = usePullToRefresh({ onRefresh: handleRefresh });
+
+  const hasData = report && (
+    report.revenue.lines.length > 0 ||
+    report.costOfSales.lines.length > 0 ||
+    report.operatingExpenses.lines.length > 0 ||
+    report.otherIncomeExpenses.lines.length > 0
+  );
 
   return (
     <>
@@ -89,9 +97,43 @@ export function IncomeStatementPage() {
           </div>
         </Card>
 
-        {isLoading || !report ? (
-          <DashboardSkeleton />
-        ) : (
+        {isLoading && <DashboardSkeleton />}
+
+        {isError && (
+          <Card>
+            <div className="flex flex-col items-center py-6 text-center">
+              <ExclamationTriangleIcon className="w-10 h-10 text-gray-40 mb-3" />
+              <p className="text-body-01 text-gray-70 mb-1">
+                Failed to load income statement
+              </p>
+              <p className="text-helper-01 text-gray-50 mb-4">
+                {(error as Error)?.message || 'Please try again later.'}
+              </p>
+              <button
+                onClick={handleRefresh}
+                className="px-4 py-2 bg-primary text-white text-body-01 font-medium rounded-lg"
+              >
+                Retry
+              </button>
+            </div>
+          </Card>
+        )}
+
+        {!isLoading && !isError && report && !hasData && (
+          <Card>
+            <div className="flex flex-col items-center py-8 text-center">
+              <DocumentChartBarIcon className="w-10 h-10 text-gray-30 mb-3" />
+              <p className="text-body-01 font-medium text-gray-70 mb-1">
+                No data for this period
+              </p>
+              <p className="text-helper-01 text-gray-50">
+                Create invoices and record expenses to see your income statement.
+              </p>
+            </div>
+          </Card>
+        )}
+
+        {!isLoading && !isError && report && hasData && (
           <>
             {/* Revenue */}
             <Section section={report.revenue} label="Revenue" />

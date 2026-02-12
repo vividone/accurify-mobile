@@ -13,6 +13,8 @@ import { DashboardPage } from '@/pages/dashboard/DashboardPage';
 import { InvoiceListPage } from '@/pages/invoices/InvoiceListPage';
 import { InvoiceCreatePage } from '@/pages/invoices/InvoiceCreatePage';
 import { InvoiceDetailPage } from '@/pages/invoices/InvoiceDetailPage';
+import { InvoiceEditPage } from '@/pages/invoices/InvoiceEditPage';
+import { InvoicePreviewPage } from '@/pages/invoices/InvoicePreviewPage';
 import { BillListPage } from '@/pages/bills/BillListPage';
 import { BillCreatePage } from '@/pages/bills/BillCreatePage';
 import { BillDetailPage } from '@/pages/bills/BillDetailPage';
@@ -71,6 +73,8 @@ export const router = createBrowserRouter([
       { path: 'invoices', element: <InvoiceListPage /> },
       { path: 'invoices/new', element: <InvoiceCreatePage /> },
       { path: 'invoices/:id', element: <InvoiceDetailPage /> },
+      { path: 'invoices/:id/edit', element: <InvoiceEditPage /> },
+      { path: 'invoices/:id/preview', element: <InvoicePreviewPage /> },
       { path: 'bills', element: <BillListPage /> },
       { path: 'bills/new', element: <BillCreatePage /> },
       { path: 'bills/:id', element: <BillDetailPage /> },

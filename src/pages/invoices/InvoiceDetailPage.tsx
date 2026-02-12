@@ -11,6 +11,7 @@ import { InvoiceStatus, InvoiceType } from '@/types';
 import { useUIStore } from '@/store/ui.store';
 import { useBusinessStore } from '@/store/business.store';
 import { getWhatsAppInvoiceLink, getWhatsAppReceiptLink } from '@/utils/whatsapp';
+import { DocumentTextIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
 
 export function InvoiceDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -49,6 +50,14 @@ export function InvoiceDetailPage() {
       <PageHeader
         title={`${invoice.type === InvoiceType.PROFORMA ? 'Proforma ' : ''}${invoice.invoiceNumber}`}
         backTo="/app/invoices"
+        actions={
+          <button
+            onClick={() => navigate(`/app/invoices/${invoice.id}/preview`)}
+            className="p-1.5 text-gray-60 active:bg-gray-10 rounded-full"
+          >
+            <DocumentTextIcon className="w-5 h-5" />
+          </button>
+        }
       />
       <div className="page-content space-y-4">
         {/* Header card */}
@@ -133,6 +142,18 @@ export function InvoiceDetailPage() {
 
         {/* Actions */}
         <div className="space-y-2 pt-2">
+          {(invoice.status === InvoiceStatus.DRAFT ||
+            invoice.status === InvoiceStatus.SENT ||
+            invoice.status === InvoiceStatus.OVERDUE) && (
+            <button
+              onClick={() => navigate(`/app/invoices/${invoice.id}/edit`)}
+              className="flex items-center justify-center gap-2 w-full h-12 border border-gray-30 text-gray-70 font-medium text-body-01 rounded-lg active:bg-gray-10"
+            >
+              <PencilSquareIcon className="w-5 h-5" />
+              Edit Invoice
+            </button>
+          )}
+
           {invoice.status === InvoiceStatus.DRAFT && (
             <>
               <button
