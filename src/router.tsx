@@ -27,6 +27,9 @@ import { OrderDetailPage } from '@/pages/orders/OrderDetailPage';
 import { StockPage } from '@/pages/stock/StockPage';
 import { NotificationsPage } from '@/pages/notifications/NotificationsPage';
 import { SettingsPage } from '@/pages/settings/SettingsPage';
+import { HelpCenterPage } from '@/pages/help/HelpCenterPage';
+import { HelpCategoryPage } from '@/pages/help/HelpCategoryPage';
+import { HelpArticlePage } from '@/pages/help/HelpArticlePage';
 import { OnboardingPage } from '@/pages/onboarding/OnboardingPage';
 
 export const router = createBrowserRouter([
@@ -75,6 +78,9 @@ export const router = createBrowserRouter([
       { path: 'stock', element: <StockPage /> },
       { path: 'notifications', element: <NotificationsPage /> },
       { path: 'settings', element: <SettingsPage /> },
+      { path: 'help', element: <HelpCenterPage /> },
+      { path: 'help/:categoryId', element: <HelpCategoryPage /> },
+      { path: 'help/:categoryId/:articleId', element: <HelpArticlePage /> },
     ],
   },
 
