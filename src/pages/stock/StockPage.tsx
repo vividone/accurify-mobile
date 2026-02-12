@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { formatCurrency, formatNumber } from '@/utils/currency';
 import { formatDate, getTodayString } from '@/utils/date';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useQueryClient } from '@tanstack/react-query';

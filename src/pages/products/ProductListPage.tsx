@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useProducts, useProductSummary, useDeactivateProduct, useActivateProduct } from '@/queries';
+import { useProducts, useProductSummary } from '@/queries';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -9,12 +9,11 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { formatCurrency, formatNumber } from '@/utils/currency';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useQueryClient } from '@tanstack/react-query';
-import { PRODUCT_CATEGORY_META, ProductCategory } from '@/types/enums';
+import { PRODUCT_CATEGORY_META } from '@/types/enums';
 import {
   CubeIcon,
   MagnifyingGlassIcon,
   PlusIcon,
-  ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 
@@ -39,8 +38,6 @@ export function ProductListPage() {
     active: activeParam,
   });
   const { data: summary } = useProductSummary();
-  const deactivate = useDeactivateProduct();
-  const activate = useActivateProduct();
 
   let products = productsData?.content ?? [];
 
