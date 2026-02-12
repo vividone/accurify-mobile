@@ -62,15 +62,15 @@ const plans: PlanOption[] = [
   {
     plan: SubscriptionPlan.PREMIUM_MONTHLY,
     label: 'Premium Monthly',
-    price: 'NGN 5,000',
+    price: 'NGN 9,999',
     period: '/month',
   },
   {
     plan: SubscriptionPlan.PREMIUM_YEARLY,
     label: 'Premium Yearly',
-    price: 'NGN 48,000',
+    price: 'NGN 99,999',
     period: '/year',
-    savings: 'Save 20%',
+    savings: '2 months free',
   },
 ];
 
