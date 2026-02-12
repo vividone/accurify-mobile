@@ -6,7 +6,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { formatCurrency } from '@/utils/currency';
-import { formatDate, toISODateString } from '@/utils/date';
+import { formatDate } from '@/utils/date';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';

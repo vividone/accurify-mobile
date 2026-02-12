@@ -254,7 +254,7 @@ export function BillingPage() {
           {historyLoading ? (
             <div className="space-y-3">
               {[...Array(3)].map((_, i) => (
-                <Card key={i} className="animate-pulse h-16" />
+                <Card key={i} className="animate-pulse h-16"><div /></Card>
               ))}
             </div>
           ) : !history || history.length === 0 ? (
