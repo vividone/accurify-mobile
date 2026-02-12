@@ -372,38 +372,42 @@ export function RegisterPage() {
           )}
         </div>
 
-        <label className="flex items-start gap-3 pt-2">
-          <input
-            type="checkbox"
-            className="mt-0.5 w-4 h-4 text-primary border-gray-30 rounded focus:ring-primary"
-            {...register('agreeToTerms')}
-          />
-          <span className="text-body-01 text-gray-60">
-            I agree to the{' '}
-            <a
-              href="/terms"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              Terms of Service
-            </a>{' '}
-            and{' '}
-            <a
-              href="/privacy"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              Privacy Policy
-            </a>
-          </span>
-        </label>
-        {errors.agreeToTerms && (
-          <p className="text-helper-01 text-danger">
-            {errors.agreeToTerms.message}
-          </p>
-        )}
+        <div className="pt-2">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              className="mt-0.5 w-5 h-5 min-w-[1.25rem] accent-primary rounded border-2 border-gray-30"
+              {...register('agreeToTerms')}
+            />
+            <span className="text-body-01 text-gray-60">
+              I agree to the{' '}
+              <a
+                href="/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary underline"
+                onClick={(e) => e.stopPropagation()}
+              >
+                Terms of Service
+              </a>{' '}
+              and{' '}
+              <a
+                href="/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary underline"
+                onClick={(e) => e.stopPropagation()}
+              >
+                Privacy Policy
+              </a>
+            </span>
+          </label>
+          {errors.agreeToTerms && (
+            <p className="mt-1 text-helper-01 text-danger">
+              {errors.agreeToTerms.message}
+            </p>
+          )}
+        </div>
 
         <button
           type="submit"

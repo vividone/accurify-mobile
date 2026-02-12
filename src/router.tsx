@@ -40,12 +40,18 @@ import { PaymentSettingsPage } from '@/pages/settings/PaymentSettingsPage';
 import { BillingPage } from '@/pages/settings/BillingPage';
 import { ClientCreatePage } from '@/pages/clients/ClientCreatePage';
 import { OnboardingPage } from '@/pages/onboarding/OnboardingPage';
+import { TermsOfServicePage } from '@/pages/legal/TermsOfServicePage';
+import { PrivacyPolicyPage } from '@/pages/legal/PrivacyPolicyPage';
 
 export const router = createBrowserRouter([
   // Public auth routes
   { path: '/login', element: <LoginPage /> },
   { path: '/register', element: <RegisterPage /> },
   { path: '/forgot-password', element: <ForgotPasswordPage /> },
+
+  // Public legal pages
+  { path: '/terms', element: <TermsOfServicePage /> },
+  { path: '/privacy', element: <PrivacyPolicyPage /> },
 
   // Onboarding (protected but no business required)
   {
