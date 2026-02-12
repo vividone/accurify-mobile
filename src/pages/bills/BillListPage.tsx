@@ -34,10 +34,10 @@ export function BillListPage() {
     await queryClient.invalidateQueries({ queryKey: ['bills'] });
   }, [queryClient]);
 
-  const { handlers, PullIndicator } = usePullToRefresh({ onRefresh: handleRefresh });
+  const { containerRef, PullIndicator } = usePullToRefresh({ onRefresh: handleRefresh });
 
   return (
-    <div className="page-content" {...handlers}>
+    <div className="page-content" ref={containerRef}>
       <PullIndicator />
       {/* Search bar */}
       <div className="relative mb-4">

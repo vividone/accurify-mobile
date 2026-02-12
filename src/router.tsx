@@ -30,6 +30,13 @@ import { SettingsPage } from '@/pages/settings/SettingsPage';
 import { HelpCenterPage } from '@/pages/help/HelpCenterPage';
 import { HelpCategoryPage } from '@/pages/help/HelpCategoryPage';
 import { HelpArticlePage } from '@/pages/help/HelpArticlePage';
+import { TransactionsPage } from '@/pages/transactions/TransactionsPage';
+import { TransactionCreatePage } from '@/pages/transactions/TransactionCreatePage';
+import { IncomeStatementPage } from '@/pages/reports/IncomeStatementPage';
+import { TaxOverviewPage } from '@/pages/tax/TaxOverviewPage';
+import { PaymentSettingsPage } from '@/pages/settings/PaymentSettingsPage';
+import { BillingPage } from '@/pages/settings/BillingPage';
+import { ClientCreatePage } from '@/pages/clients/ClientCreatePage';
 import { OnboardingPage } from '@/pages/onboarding/OnboardingPage';
 
 export const router = createBrowserRouter([
@@ -68,6 +75,7 @@ export const router = createBrowserRouter([
       { path: 'bills/new', element: <BillCreatePage /> },
       { path: 'bills/:id', element: <BillDetailPage /> },
       { path: 'clients', element: <ClientListPage /> },
+      { path: 'clients/new', element: <ClientCreatePage /> },
       { path: 'clients/:id', element: <ClientDetailPage /> },
       { path: 'products', element: <ProductListPage /> },
       { path: 'products/new', element: <ProductCreatePage /> },
@@ -78,6 +86,12 @@ export const router = createBrowserRouter([
       { path: 'stock', element: <StockPage /> },
       { path: 'notifications', element: <NotificationsPage /> },
       { path: 'settings', element: <SettingsPage /> },
+      { path: 'transactions', element: <TransactionsPage /> },
+      { path: 'transactions/new', element: <TransactionCreatePage /> },
+      { path: 'income-statement', element: <IncomeStatementPage /> },
+      { path: 'tax-overview', element: <TaxOverviewPage /> },
+      { path: 'payment-settings', element: <PaymentSettingsPage /> },
+      { path: 'billing', element: <BillingPage /> },
       { path: 'help', element: <HelpCenterPage /> },
       { path: 'help/:categoryId', element: <HelpCategoryPage /> },
       { path: 'help/:categoryId/:articleId', element: <HelpArticlePage /> },

@@ -58,12 +58,12 @@ export function OrderListPage() {
     await queryClient.invalidateQueries({ queryKey: ['orders'] });
   }, [queryClient]);
 
-  const { handlers, PullIndicator } = usePullToRefresh({ onRefresh: handleRefresh });
+  const { containerRef, PullIndicator } = usePullToRefresh({ onRefresh: handleRefresh });
 
   return (
     <>
       <PageHeader title="Orders" backTo="/app/dashboard" />
-      <div className="page-content" {...handlers}>
+      <div className="page-content" ref={containerRef}>
         <PullIndicator />
 
         {/* Filter chips */}

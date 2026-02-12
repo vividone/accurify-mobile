@@ -58,7 +58,7 @@ export function ProductListPage() {
     await queryClient.invalidateQueries({ queryKey: ['products'] });
   }, [queryClient]);
 
-  const { handlers, PullIndicator } = usePullToRefresh({ onRefresh: handleRefresh });
+  const { containerRef, PullIndicator } = usePullToRefresh({ onRefresh: handleRefresh });
 
   return (
     <>
@@ -76,7 +76,7 @@ export function ProductListPage() {
       />
       <div
         className="page-content"
-        {...handlers}
+        ref={containerRef}
       >
         <PullIndicator />
 

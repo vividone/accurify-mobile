@@ -32,7 +32,7 @@ export function DashboardPage() {
     await queryClient.invalidateQueries({ queryKey: ['dashboard'] });
   }, [queryClient]);
 
-  const { handlers, PullIndicator } = usePullToRefresh({ onRefresh: handleRefresh });
+  const { containerRef, PullIndicator } = usePullToRefresh({ onRefresh: handleRefresh });
 
   if (isLoading || !dashboard) {
     return <DashboardSkeleton />;
@@ -106,7 +106,7 @@ export function DashboardPage() {
   ];
 
   return (
-    <div className="page-content space-y-5" {...handlers}>
+    <div className="page-content space-y-5" ref={containerRef}>
       <PullIndicator />
       {/* Summary Cards */}
       <div className="grid grid-cols-2 gap-3">

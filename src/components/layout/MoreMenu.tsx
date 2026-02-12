@@ -11,6 +11,11 @@ import {
   ShoppingBagIcon,
   ArchiveBoxIcon,
   ShoppingCartIcon,
+  BanknotesIcon,
+  DocumentChartBarIcon,
+  ReceiptPercentIcon,
+  CreditCardIcon,
+  SparklesIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useUIStore } from '@/store/ui.store';
@@ -37,6 +42,33 @@ export function MoreMenu() {
         },
       },
     ];
+
+    items.push(
+      {
+        label: 'Transactions',
+        icon: BanknotesIcon,
+        onClick: () => {
+          setOpen(false);
+          navigate('/app/transactions');
+        },
+      },
+      {
+        label: 'Income Statement',
+        icon: DocumentChartBarIcon,
+        onClick: () => {
+          setOpen(false);
+          navigate('/app/income-statement');
+        },
+      },
+      {
+        label: 'Tax Overview',
+        icon: ReceiptPercentIcon,
+        onClick: () => {
+          setOpen(false);
+          navigate('/app/tax-overview');
+        },
+      },
+    );
 
     if (isGoodsBusiness) {
       items.push(
@@ -76,6 +108,22 @@ export function MoreMenu() {
     }
 
     items.push(
+      {
+        label: 'Payment Settings',
+        icon: CreditCardIcon,
+        onClick: () => {
+          setOpen(false);
+          navigate('/app/payment-settings');
+        },
+      },
+      {
+        label: 'Billing & Subscription',
+        icon: SparklesIcon,
+        onClick: () => {
+          setOpen(false);
+          navigate('/app/billing');
+        },
+      },
       {
         label: 'Settings',
         icon: Cog6ToothIcon,
