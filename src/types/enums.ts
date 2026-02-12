@@ -30,6 +30,13 @@ export enum InvoiceStatus {
   PAID = 'PAID',
   OVERDUE = 'OVERDUE',
   CANCELLED = 'CANCELLED',
+  CONVERTED = 'CONVERTED',
+}
+
+// Invoice type
+export enum InvoiceType {
+  STANDARD = 'STANDARD',
+  PROFORMA = 'PROFORMA',
 }
 
 // Transaction types

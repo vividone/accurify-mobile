@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useInvoice, useSendInvoice, useDeleteInvoice, useCancelInvoice, useResendInvoice, useMarkInvoicePaid, useSendReceipt } from '@/queries';
+import { useInvoice, useSendInvoice, useDeleteInvoice, useCancelInvoice, useResendInvoice, useMarkInvoicePaid, useSendReceipt, useConvertToInvoice } from '@/queries';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card } from '@/components/ui/Card';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { DashboardSkeleton } from '@/components/ui/Skeleton';
 import { formatCurrency } from '@/utils/currency';
 import { formatDate } from '@/utils/date';
-import { InvoiceStatus } from '@/types';
+import { InvoiceStatus, InvoiceType } from '@/types';
 import { useUIStore } from '@/store/ui.store';
 import { useBusinessStore } from '@/store/business.store';
 import { getWhatsAppInvoiceLink, getWhatsAppReceiptLink } from '@/utils/whatsapp';
@@ -22,6 +22,7 @@ export function InvoiceDetailPage() {
   const resendInvoice = useResendInvoice();
   const markPaid = useMarkInvoicePaid();
   const sendReceipt = useSendReceipt();
+  const convertToInvoice = useConvertToInvoice();
   const showNotification = useUIStore((s) => s.showNotification);
   const business = useBusinessStore((s) => s.business);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -45,7 +46,10 @@ export function InvoiceDetailPage() {
 
   return (
     <>
-      <PageHeader title={invoice.invoiceNumber} backTo="/app/invoices" />
+      <PageHeader
+        title={`${invoice.type === InvoiceType.PROFORMA ? 'Proforma ' : ''}${invoice.invoiceNumber}`}
+        backTo="/app/invoices"
+      />
       <div className="page-content space-y-4">
         {/* Header card */}
         <Card>
@@ -172,13 +176,27 @@ export function InvoiceDetailPage() {
                 </svg>
                 Share via WhatsApp
               </a>
-              <button
-                onClick={() => handleAction('marked as paid', () => markPaid.mutateAsync({ id: invoice.id, data: { paidAt: new Date().toISOString() } }))}
-                disabled={actionLoading === 'marked as paid'}
-                className="w-full h-12 bg-success text-white font-medium text-body-01 rounded-lg disabled:opacity-50"
-              >
-                {actionLoading === 'marked as paid' ? 'Processing...' : 'Mark as Paid'}
-              </button>
+              {invoice.type !== InvoiceType.PROFORMA && (
+                <button
+                  onClick={() => handleAction('marked as paid', () => markPaid.mutateAsync({ id: invoice.id, data: { paidAt: new Date().toISOString() } }))}
+                  disabled={actionLoading === 'marked as paid'}
+                  className="w-full h-12 bg-success text-white font-medium text-body-01 rounded-lg disabled:opacity-50"
+                >
+                  {actionLoading === 'marked as paid' ? 'Processing...' : 'Mark as Paid'}
+                </button>
+              )}
+              {invoice.type === InvoiceType.PROFORMA && (
+                <button
+                  onClick={() => handleAction('converted', async () => {
+                    const newInvoice = await convertToInvoice.mutateAsync(invoice.id);
+                    navigate(`/app/invoices/${newInvoice.id}`);
+                  })}
+                  disabled={actionLoading === 'converted'}
+                  className="w-full h-12 bg-success text-white font-medium text-body-01 rounded-lg disabled:opacity-50"
+                >
+                  {actionLoading === 'converted' ? 'Converting...' : 'Convert to Invoice'}
+                </button>
+              )}
               <button
                 onClick={() => handleAction('cancelled', () => cancelInvoice.mutateAsync(invoice.id))}
                 disabled={actionLoading === 'cancelled'}
@@ -189,7 +207,7 @@ export function InvoiceDetailPage() {
             </>
           )}
 
-          {invoice.status === InvoiceStatus.PAID && (
+          {invoice.status === InvoiceStatus.PAID && invoice.type !== InvoiceType.PROFORMA && (
             <>
               <button
                 onClick={() => handleAction('receipt sent', () => sendReceipt.mutateAsync(invoice.id))}
@@ -210,6 +228,21 @@ export function InvoiceDetailPage() {
                 Send Receipt via WhatsApp
               </a>
             </>
+          )}
+
+          {/* Convert to Invoice button for draft proforma */}
+          {invoice.type === InvoiceType.PROFORMA &&
+            invoice.status === InvoiceStatus.DRAFT && (
+            <button
+              onClick={() => handleAction('converted', async () => {
+                const newInvoice = await convertToInvoice.mutateAsync(invoice.id);
+                navigate(`/app/invoices/${newInvoice.id}`);
+              })}
+              disabled={actionLoading === 'converted'}
+              className="w-full h-12 border border-primary text-primary font-medium text-body-01 rounded-lg disabled:opacity-50"
+            >
+              {actionLoading === 'converted' ? 'Converting...' : 'Convert to Invoice'}
+            </button>
           )}
         </div>
       </div>

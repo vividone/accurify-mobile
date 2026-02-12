@@ -10,6 +10,7 @@ const statusConfig: Record<string, { label: string; variant: 'success' | 'warnin
   OVERDUE: { label: 'Overdue', variant: 'danger' },
   PAID: { label: 'Paid', variant: 'success' },
   CANCELLED: { label: 'Cancelled', variant: 'gray' },
+  CONVERTED: { label: 'Converted', variant: 'purple' },
   PARTIALLY_PAID: { label: 'Partial', variant: 'warning' },
 
   // Bill statuses

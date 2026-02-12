@@ -23,6 +23,7 @@ export const invoicesApi = {
     });
 
     if (filters?.status) params.append('status', filters.status);
+    if (filters?.type) params.append('type', filters.type);
     if (filters?.startDate) params.append('startDate', filters.startDate);
     if (filters?.endDate) params.append('endDate', filters.endDate);
     if (filters?.search) params.append('search', filters.search);
@@ -116,5 +117,13 @@ export const invoicesApi = {
       responseType: 'blob',
     });
     return response.data;
+  },
+
+  // Convert proforma invoice to standard invoice
+  convertToInvoice: async (id: string): Promise<Invoice> => {
+    const response = await apiClient.post<ApiResponse<Invoice>>(
+      `${INVOICES_BASE}/${id}/convert`
+    );
+    return response.data.data!;
   },
 };

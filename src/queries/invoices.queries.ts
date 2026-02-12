@@ -134,3 +134,15 @@ export function useSendReceipt() {
     mutationFn: (id: string) => invoicesApi.sendReceipt(id),
   });
 }
+
+export function useConvertToInvoice() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => invoicesApi.convertToInvoice(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: invoiceKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: invoiceKeys.detail(id) });
+    },
+  });
+}
