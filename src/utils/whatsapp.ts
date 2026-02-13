@@ -1,4 +1,5 @@
 import type { Invoice } from '@/types';
+import { invoicesApi } from '@/services/api';
 import { formatCurrency } from './currency';
 import { formatDate } from './date';
 
@@ -74,11 +75,9 @@ function buildReceiptMessage(invoice: Invoice, businessName: string): string {
 }
 
 /**
- * Generate a wa.me share URL for an invoice.
- * If the client has a phone number, it pre-fills the recipient.
- * Otherwise, it opens WhatsApp with just the message (user picks contact).
+ * Generate a wa.me share URL for an invoice (text-only fallback).
  */
-export function getWhatsAppInvoiceLink(invoice: Invoice, businessName: string): string {
+function getWhatsAppInvoiceLink(invoice: Invoice, businessName: string): string {
   const message = buildInvoiceMessage(invoice, businessName);
   const encoded = encodeURIComponent(message);
 
@@ -91,9 +90,9 @@ export function getWhatsAppInvoiceLink(invoice: Invoice, businessName: string): 
 }
 
 /**
- * Generate a wa.me share URL for a receipt (paid invoice).
+ * Generate a wa.me share URL for a receipt (text-only fallback).
  */
-export function getWhatsAppReceiptLink(invoice: Invoice, businessName: string): string {
+function getWhatsAppReceiptLink(invoice: Invoice, businessName: string): string {
   const message = buildReceiptMessage(invoice, businessName);
   const encoded = encodeURIComponent(message);
 
@@ -103,4 +102,72 @@ export function getWhatsAppReceiptLink(invoice: Invoice, businessName: string): 
   }
 
   return `https://wa.me/?text=${encoded}`;
+}
+
+/**
+ * Trigger a browser download of a blob with a given filename.
+ */
+function triggerDownload(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Share an invoice via WhatsApp with the PDF attached.
+ * Uses Web Share API on supported devices (mobile), falls back to
+ * downloading the PDF + opening a wa.me text link on desktop.
+ */
+export async function shareInvoiceViaWhatsApp(invoice: Invoice, businessName: string): Promise<void> {
+  const blob = await invoicesApi.getPdf(invoice.id);
+  const filename = `${invoice.invoiceNumber}.pdf`;
+  const file = new File([blob], filename, { type: 'application/pdf' });
+  const message = buildInvoiceMessage(invoice, businessName);
+
+  if (navigator.canShare?.({ files: [file] })) {
+    await navigator.share({ text: message, files: [file] });
+  } else {
+    triggerDownload(blob, filename);
+    window.open(getWhatsAppInvoiceLink(invoice, businessName), '_blank');
+  }
+}
+
+/**
+ * Share a receipt via WhatsApp with the PDF attached.
+ * Uses Web Share API on supported devices (mobile), falls back to
+ * downloading the PDF + opening a wa.me text link on desktop.
+ */
+export async function shareReceiptViaWhatsApp(invoice: Invoice, businessName: string): Promise<void> {
+  const blob = await invoicesApi.getReceiptPdf(invoice.id);
+  const filename = `Receipt-${invoice.invoiceNumber}.pdf`;
+  const file = new File([blob], filename, { type: 'application/pdf' });
+  const message = buildReceiptMessage(invoice, businessName);
+
+  if (navigator.canShare?.({ files: [file] })) {
+    await navigator.share({ text: message, files: [file] });
+  } else {
+    triggerDownload(blob, filename);
+    window.open(getWhatsAppReceiptLink(invoice, businessName), '_blank');
+  }
+}
+
+/**
+ * Download the invoice PDF.
+ */
+export async function downloadInvoicePdf(invoice: Invoice): Promise<void> {
+  const blob = await invoicesApi.getPdf(invoice.id);
+  triggerDownload(blob, `${invoice.invoiceNumber}.pdf`);
+}
+
+/**
+ * Download the receipt PDF.
+ */
+export async function downloadReceiptPdf(invoice: Invoice): Promise<void> {
+  const blob = await invoicesApi.getReceiptPdf(invoice.id);
+  triggerDownload(blob, `Receipt-${invoice.invoiceNumber}.pdf`);
 }
