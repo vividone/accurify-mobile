@@ -12,6 +12,13 @@ import { useUIStore } from '@/store/ui.store';
 import { useBusinessStore } from '@/store/business.store';
 import { InvoiceType, InvoiceStatus, BusinessType } from '@/types/enums';
 import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+import clsx from 'clsx';
+
+const DEFAULT_VAT_RATE = 0.075; // 7.5% Nigerian VAT
+const WHT_RATES = [
+  { value: 0.05, label: '5% — Contracts, Supplies' },
+  { value: 0.10, label: '10% — Professional Services' },
+];
 
 const lineItemSchema = z.object({
   description: z.string().min(1, 'Required'),
@@ -43,6 +50,9 @@ export function InvoiceEditPage() {
   const { data: productsData } = useProducts(0, 200, { active: true });
   const products = productsData?.content ?? [];
   const [sending, setSending] = useState(false);
+  const [applyVat, setApplyVat] = useState(false);
+  const [whtApplicable, setWhtApplicable] = useState(false);
+  const [whtRate, setWhtRate] = useState(0.05);
 
   const {
     register,
@@ -77,6 +87,9 @@ export function InvoiceEditPage() {
           unitPrice: item.unitPrice,
         })),
       });
+      setApplyVat(invoice.vatAmount > 0);
+      setWhtApplicable(!!invoice.whtApplicable);
+      if (invoice.whtRate) setWhtRate(invoice.whtRate);
     }
   }, [invoice, reset]);
 
@@ -86,6 +99,9 @@ export function InvoiceEditPage() {
     (sum, item) => sum + (item.quantity || 0) * (item.unitPrice || 0),
     0
   );
+  const vatAmount = applyVat ? subtotal * DEFAULT_VAT_RATE : 0;
+  const whtAmount = whtApplicable ? subtotal * whtRate : 0;
+  const total = subtotal + vatAmount - whtAmount;
 
   const selectedClient = clients.find((c) => c.id === watch('clientId'));
   const isProforma = invoice?.type === InvoiceType.PROFORMA;
@@ -108,6 +124,10 @@ export function InvoiceEditPage() {
           items: data.items,
           notes: data.notes,
           type: invoice.type,
+          applyVat,
+          vatRate: applyVat ? DEFAULT_VAT_RATE : undefined,
+          whtApplicable,
+          whtRate: whtApplicable ? whtRate : undefined,
         },
       });
 
@@ -336,10 +356,98 @@ export function InvoiceEditPage() {
               <PlusIcon className="w-4 h-4" /> Add Item
             </button>
 
-            <div className="border-t border-gray-20 mt-4 pt-3 flex justify-between text-heading-02">
-              <span>Subtotal</span>
-              <span className="tabular-nums">{formatCurrency(subtotal)}</span>
+            <div className="border-t border-gray-20 mt-4 pt-3 space-y-2">
+              <div className="flex justify-between text-body-01">
+                <span className="text-gray-50">Subtotal</span>
+                <span className="tabular-nums text-gray-100">{formatCurrency(subtotal)}</span>
+              </div>
+              {applyVat && (
+                <div className="flex justify-between text-body-01">
+                  <span className="text-gray-50">VAT (7.5%)</span>
+                  <span className="tabular-nums text-gray-100">{formatCurrency(vatAmount)}</span>
+                </div>
+              )}
+              {whtApplicable && (
+                <div className="flex justify-between text-body-01">
+                  <span className="text-gray-50">WHT ({(whtRate * 100).toFixed(0)}%)</span>
+                  <span className="tabular-nums text-danger">-{formatCurrency(whtAmount)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-heading-02 pt-1 border-t border-gray-20">
+                <span>{whtApplicable ? 'Net Receivable' : 'Total'}</span>
+                <span className="tabular-nums">{formatCurrency(total)}</span>
+              </div>
             </div>
+          </Card>
+
+          {/* Tax settings */}
+          <Card>
+            <p className="text-label-01 text-gray-70 mb-3">Tax Settings</p>
+
+            {/* VAT toggle */}
+            <div className="flex items-center justify-between py-2">
+              <div>
+                <p className="text-body-01 text-gray-100">Apply VAT</p>
+                <p className="text-helper-01 text-gray-40">7.5% Nigerian VAT rate</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setApplyVat(!applyVat)}
+                className={clsx(
+                  'relative w-11 h-6 rounded-full transition-colors',
+                  applyVat ? 'bg-primary' : 'bg-gray-30'
+                )}
+              >
+                <span
+                  className={clsx(
+                    'absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform',
+                    applyVat && 'translate-x-5'
+                  )}
+                />
+              </button>
+            </div>
+
+            <div className="border-t border-gray-10 my-2" />
+
+            {/* WHT toggle */}
+            <div className="flex items-center justify-between py-2">
+              <div>
+                <p className="text-body-01 text-gray-100">WHT Applicable</p>
+                <p className="text-helper-01 text-gray-40">Withheld by client on payment</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setWhtApplicable(!whtApplicable)}
+                className={clsx(
+                  'relative w-11 h-6 rounded-full transition-colors',
+                  whtApplicable ? 'bg-primary' : 'bg-gray-30'
+                )}
+              >
+                <span
+                  className={clsx(
+                    'absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform',
+                    whtApplicable && 'translate-x-5'
+                  )}
+                />
+              </button>
+            </div>
+
+            {whtApplicable && (
+              <div className="mt-2">
+                <label className="block text-helper-01 text-gray-50 mb-1.5">WHT Rate</label>
+                <select
+                  value={whtRate}
+                  onChange={(e) => setWhtRate(Number(e.target.value))}
+                  className="w-full h-12 px-4 bg-gray-10 border border-gray-30 text-body-01 text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  {WHT_RATES.map((rate) => (
+                    <option key={rate.value} value={rate.value}>
+                      {rate.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </Card>
 
           {/* Notes */}
