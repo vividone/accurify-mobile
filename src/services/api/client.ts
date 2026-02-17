@@ -38,6 +38,13 @@ apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // SECURITY: Token is now sent via httpOnly cookie automatically (FE-001)
     // No need to manually attach Authorization header
+
+    // When sending FormData (file uploads), remove the default Content-Type header
+    // so axios can auto-set 'multipart/form-data' with the correct boundary
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
+
     return config;
   },
   (error) => Promise.reject(error)
