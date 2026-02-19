@@ -59,11 +59,10 @@
 }
 
 @layer components {
-  /* Page container that accounts for header and bottom bar */
+  /* Page container with standard spacing — bottom-bar clearance is on <main> in MobileShell */
   .page-content {
-    @apply flex-1 overflow-y-auto px-4 pb-4;
+    @apply px-4 pb-4;
     padding-top: 0.5rem;
-    padding-bottom: calc(var(--bottom-bar-height) + var(--safe-area-bottom) + 1rem);
   }
 
   /* Pull-to-refresh indicator */

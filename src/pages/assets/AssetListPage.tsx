@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useFixedAssets } from '@/queries';
 import { Card } from '@/components/ui/Card';
 import { StatusBadge } from '@/components/ui/StatusBadge';
@@ -21,12 +20,12 @@ const statusFilters: { label: string; value: FixedAssetStatus | 'ALL' }[] = [
 ];
 
 export function AssetListPage() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [activeFilter, setActiveFilter] = useState<FixedAssetStatus | 'ALL'>('ALL');
   const [page] = useState(0);
 
-  const { data, isLoading } = useFixedAssets(page, 50);
+  const PAGE_SIZE = 100;
+  const { data, isLoading, isError } = useFixedAssets(page, PAGE_SIZE);
   const allAssets = data?.content ?? [];
   const assets = activeFilter === 'ALL'
     ? allAssets
@@ -60,6 +59,15 @@ export function AssetListPage() {
         ))}
       </div>
 
+      {/* Error state */}
+      {isError && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+          <p className="text-body-01 text-red-700">
+            Unable to load assets. Please try again.
+          </p>
+        </div>
+      )}
+
       {/* Asset list */}
       {isLoading ? (
         <div className="space-y-3">
@@ -82,7 +90,6 @@ export function AssetListPage() {
           {assets.map((asset) => (
             <Card
               key={asset.id}
-              onClick={() => navigate(`/app/assets/${asset.id}`)}
             >
               <div className="flex items-center justify-between mb-1">
                 <span className="text-body-01 font-medium text-gray-100">
@@ -109,13 +116,18 @@ export function AssetListPage() {
                   <div className="flex justify-between text-helper-01 text-gray-40">
                     <span>Monthly dep: {formatCurrency(asset.monthlyDepreciation)}</span>
                     <span>
-                      {((asset.accumulatedDepreciation / asset.depreciableAmount) * 100).toFixed(0)}% depreciated
+                      {asset.depreciableAmount > 0 ? ((asset.accumulatedDepreciation / asset.depreciableAmount) * 100).toFixed(0) : '0'}% depreciated
                     </span>
                   </div>
                 </div>
               )}
             </Card>
           ))}
+          {data && data.totalElements > PAGE_SIZE && (
+            <p className="text-center text-helper-01 text-gray-40 py-4">
+              Showing {PAGE_SIZE} of {data.totalElements} assets
+            </p>
+          )}
         </div>
       )}
     </div>
