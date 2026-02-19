@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useStockHistory, useStockSummary, useRecordStockMovement, useProducts } from '@/queries';
+import { useStockHistory, useStockSummary, useRecordStockMovement, useProducts, useExpiryAlerts } from '@/queries';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -16,6 +16,7 @@ import {
   PlusIcon,
   ArrowUpIcon,
   ArrowDownIcon,
+  ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 
@@ -41,6 +42,7 @@ export function StockPage() {
   const { data: summary } = useStockSummary();
   const { data: productsData } = useProducts(0, 200, { active: true });
   const recordMovement = useRecordStockMovement();
+  const { data: expiryAlerts } = useExpiryAlerts(30);
 
   let movements = stockData?.content ?? [];
   const products = productsData?.content ?? [];
@@ -132,6 +134,40 @@ export function StockPage() {
               <p className="text-helper-01 text-gray-50">Total</p>
               <p className="text-heading-03 text-gray-100 tabular-nums">{summary.totalMovements}</p>
             </Card>
+          </div>
+        )}
+
+        {/* Expiry alerts banner */}
+        {!productIdFilter && expiryAlerts && (expiryAlerts.expiredCount > 0 || expiryAlerts.expiringCount > 0) && (
+          <div className="mb-4 space-y-2">
+            {expiryAlerts.expiredCount > 0 && (
+              <div className="flex items-center gap-3 p-3 bg-danger-light rounded-lg">
+                <ExclamationTriangleIcon className="w-5 h-5 text-danger flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-body-01 font-medium text-danger">
+                    {expiryAlerts.expiredCount} expired batch{expiryAlerts.expiredCount !== 1 ? 'es' : ''}
+                  </p>
+                  <p className="text-helper-01 text-danger/70">
+                    {expiryAlerts.expiredBatches.slice(0, 3).map(b => b.productName).join(', ')}
+                    {expiryAlerts.expiredCount > 3 && ` +${expiryAlerts.expiredCount - 3} more`}
+                  </p>
+                </div>
+              </div>
+            )}
+            {expiryAlerts.expiringCount > 0 && (
+              <div className="flex items-center gap-3 p-3 bg-warning-light rounded-lg">
+                <ExclamationTriangleIcon className="w-5 h-5 text-warning-dark flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-body-01 font-medium text-warning-dark">
+                    {expiryAlerts.expiringCount} batch{expiryAlerts.expiringCount !== 1 ? 'es' : ''} expiring soon
+                  </p>
+                  <p className="text-helper-01 text-warning-dark/70">
+                    {expiryAlerts.expiringBatches.slice(0, 3).map(b => `${b.productName} (${b.daysUntilExpiry}d)`).join(', ')}
+                    {expiryAlerts.expiringCount > 3 && ` +${expiryAlerts.expiringCount - 3} more`}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

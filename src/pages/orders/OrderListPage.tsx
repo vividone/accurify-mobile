@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useOrders } from '@/queries';
+import { useOrders, useOrderSearch } from '@/queries';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -15,7 +15,7 @@ import {
   ORDER_STATUS_META,
   ORDER_SOURCE_META,
 } from '@/types/store.types';
-import { ShoppingBagIcon } from '@heroicons/react/24/outline';
+import { ShoppingBagIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 
 const statusFilters: { label: string; value: OrderStatus | 'ALL' }[] = [
@@ -48,11 +48,15 @@ export function OrderListPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [activeFilter, setActiveFilter] = useState<OrderStatus | 'ALL'>('ALL');
+  const [search, setSearch] = useState('');
   const [page] = useState(0);
   const status = activeFilter === 'ALL' ? undefined : activeFilter;
 
   const { data: ordersData, isLoading } = useOrders(page, 50, status);
-  const orders = ordersData?.content ?? [];
+  const { data: searchData, isLoading: isSearching } = useOrderSearch(search, 0, 50);
+
+  const isSearchActive = search.length >= 2;
+  const orders = isSearchActive ? (searchData?.content ?? []) : (ordersData?.content ?? []);
 
   const handleRefresh = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ['orders'] });
@@ -65,6 +69,18 @@ export function OrderListPage() {
       <PageHeader title="Orders" backTo="/app/dashboard" />
       <div className="page-content" ref={containerRef}>
         <PullIndicator />
+
+        {/* Search */}
+        <div className="relative mb-3">
+          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-40" />
+          <input
+            type="text"
+            placeholder="Search orders..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full h-10 pl-10 pr-4 bg-white border border-gray-20 rounded-lg text-body-01 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+          />
+        </div>
 
         {/* Filter chips */}
         <div className="flex gap-2 overflow-x-auto scrollbar-hide mb-4 -mx-4 px-4">
@@ -85,7 +101,7 @@ export function OrderListPage() {
         </div>
 
         {/* Order list */}
-        {isLoading ? (
+        {(isLoading || (isSearchActive && isSearching)) ? (
           <div className="space-y-3">
             {[...Array(5)].map((_, i) => (
               <CardSkeleton key={i} />

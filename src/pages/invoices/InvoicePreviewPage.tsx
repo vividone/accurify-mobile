@@ -43,9 +43,9 @@ export function InvoicePreviewPage() {
   return (
     <>
       <PageHeader title={title} backTo={`/app/invoices/${id}`} />
-      <div className="flex flex-col flex-1 min-h-0">
+      <div className="px-4 pb-4">
         {isLoading && (
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex items-center justify-center py-20">
             <div className="text-center">
               <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3" />
               <p className="text-body-01 text-gray-50">Loading PDF...</p>
@@ -54,7 +54,7 @@ export function InvoicePreviewPage() {
         )}
 
         {isError && (
-          <div className="flex-1 flex items-center justify-center p-6">
+          <div className="flex items-center justify-center p-6">
             <div className="text-center">
               <p className="text-body-01 text-gray-70 mb-2">
                 Failed to load PDF preview.
@@ -67,16 +67,17 @@ export function InvoicePreviewPage() {
         )}
 
         {blobUrl && (
-          <>
+          <div className="space-y-4">
             {/* PDF viewer */}
             <iframe
               src={blobUrl}
-              className="flex-1 w-full border-0"
+              className="w-full border-0 rounded-lg bg-white"
+              style={{ height: '70vh' }}
               title="Invoice PDF Preview"
             />
 
-            {/* Action buttons (fallback for devices that don't render PDF in iframe) */}
-            <div className="flex gap-2 p-4 bg-white border-t border-gray-20">
+            {/* Action buttons */}
+            <div className="flex gap-2">
               <button
                 onClick={handleDownload}
                 className="flex-1 flex items-center justify-center gap-2 h-12 bg-primary text-white font-medium text-body-01 rounded-lg"
@@ -91,7 +92,7 @@ export function InvoicePreviewPage() {
                 <ArrowTopRightOnSquareIcon className="w-5 h-5" />
               </button>
             </div>
-          </>
+          </div>
         )}
       </div>
     </>

@@ -14,7 +14,10 @@ export function MobileShell() {
       <MobileHeader />
       <UpdateBanner />
       <InstallBanner />
-      <main className="flex-1 overflow-y-auto bg-gray-10">
+      <main
+        className="flex-1 overflow-y-auto bg-gray-10"
+        style={{ paddingBottom: 'calc(var(--bottom-bar-height) + var(--safe-area-bottom) + 1rem)' }}
+      >
         <Outlet />
       </main>
       <BottomTabBar />

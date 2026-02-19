@@ -17,6 +17,7 @@ import { formatDate } from '@/utils/date';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useQueryClient } from '@tanstack/react-query';
 import { useUIStore } from '@/store/ui.store';
+import { BatchManagementSection } from '@/components/products/BatchManagementSection';
 import { PRODUCT_CATEGORY_META, STOCK_MOVEMENT_META } from '@/types/enums';
 import type { StockMovementType } from '@/types/enums';
 import {
@@ -24,6 +25,7 @@ import {
   TagIcon,
   ChartBarIcon,
   CameraIcon,
+  PencilSquareIcon,
 } from '@heroicons/react/24/outline';
 
 export function ProductDetailPage() {
@@ -124,7 +126,18 @@ export function ProductDetailPage() {
 
   return (
     <>
-      <PageHeader title={product.name} backTo="/app/products" />
+      <PageHeader
+        title={product.name}
+        backTo="/app/products"
+        actions={
+          <button
+            onClick={() => navigate(`/app/products/${id}/edit`)}
+            className="p-1.5 text-primary active:bg-primary-50 rounded-full"
+          >
+            <PencilSquareIcon className="w-5 h-5" />
+          </button>
+        }
+      />
       <div className="page-content space-y-4" ref={containerRef}>
         <PullIndicator />
 
@@ -272,6 +285,12 @@ export function ProductDetailPage() {
           </div>
         )}
 
+        {/* Batch tracking */}
+        <BatchManagementSection
+          productId={product.id}
+          enableBatchTracking={product.enableBatchTracking}
+        />
+
         {/* Action buttons */}
         <div className="space-y-2 pt-2 pb-4">
           <button
@@ -280,6 +299,12 @@ export function ProductDetailPage() {
             className="w-full h-12 bg-primary text-white font-medium text-body-01 rounded-lg disabled:opacity-50"
           >
             Record Sale
+          </button>
+          <button
+            onClick={() => navigate(`/app/products/${id}/edit`)}
+            className="w-full h-12 border border-primary text-primary font-medium text-body-01 rounded-lg"
+          >
+            Edit Product
           </button>
           <button
             onClick={() => navigate(`/app/stock?productId=${product.id}`)}

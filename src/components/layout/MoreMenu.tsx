@@ -11,6 +11,7 @@ import {
   ShoppingBagIcon,
   ArchiveBoxIcon,
   ShoppingCartIcon,
+  BuildingStorefrontIcon,
   BanknotesIcon,
   DocumentChartBarIcon,
   ReceiptPercentIcon,
@@ -73,6 +74,7 @@ export function MoreMenu() {
       result.push({
         title: 'Inventory & Store',
         items: [
+          { label: 'Store Dashboard', icon: BuildingStorefrontIcon, onClick: () => go('/app/store') },
           { label: 'Products', icon: CubeIcon, onClick: () => go('/app/products') },
           { label: 'Inventory', icon: ArchiveBoxIcon, onClick: () => go('/app/stock') },
           { label: 'Point of Sale', icon: ShoppingCartIcon, onClick: () => go('/app/pos') },

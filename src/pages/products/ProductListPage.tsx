@@ -177,6 +177,9 @@ export function ProductListPage() {
                       {product.lowStock && !product.outOfStock && (
                         <Badge variant="warning">Low</Badge>
                       )}
+                      {product.expiringBatchCount != null && product.expiringBatchCount > 0 && (
+                        <Badge variant="warning">Expiring</Badge>
+                      )}
                     </div>
                     <p className="text-label-01 text-gray-50 truncate">
                       {product.sku ? `SKU: ${product.sku}` : PRODUCT_CATEGORY_META[product.category]?.displayName ?? product.category}
