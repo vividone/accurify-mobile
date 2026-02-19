@@ -19,3 +19,4 @@ export { pricingApi } from './pricing.api';
 export { invoicePaymentApi } from './invoice-payment.api';
 export { publicPaymentApi } from './public-payment.api';
 export { taxApi } from './tax.api';
+export { assetsApi } from './assets.api';

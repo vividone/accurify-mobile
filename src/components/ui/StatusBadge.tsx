@@ -16,6 +16,11 @@ const statusConfig: Record<string, { label: string; variant: 'success' | 'warnin
   // Bill statuses
   RECEIVED: { label: 'Received', variant: 'info' },
   APPROVED: { label: 'Approved', variant: 'purple' },
+
+  // Fixed asset statuses
+  ACTIVE: { label: 'Active', variant: 'success' },
+  FULLY_DEPRECIATED: { label: 'Fully Depreciated', variant: 'gray' },
+  DISPOSED: { label: 'Disposed', variant: 'danger' },
 };
 
 interface StatusBadgeProps {

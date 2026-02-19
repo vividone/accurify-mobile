@@ -8,20 +8,6 @@ import { openUpgradeModalFromInterceptor } from '@/store/ui.store';
 import { API_CONFIG } from '@/utils/constants';
 import type { ApiError } from '@/types';
 
-// Public auth pages where 401 should not redirect to login
-const PUBLIC_AUTH_PATHS = [
-  '/login',
-  '/register',
-  '/verify-email',
-  '/resend-verification',
-  '/forgot-password',
-  '/reset-password',
-];
-
-// Helper to check if current path is a public auth page
-const isOnPublicAuthPage = () =>
-  PUBLIC_AUTH_PATHS.some(path => window.location.pathname.startsWith(path));
-
 // SECURITY: Create axios instance with credentials enabled for httpOnly cookies (FE-001)
 // SECURITY: API versioning prefix (BE-017)
 export const apiClient: AxiosInstance = axios.create({
@@ -94,12 +80,9 @@ apiClient.interceptors.response.use(
       // SECURITY: Check if user is authenticated (based on local state)
       const isAuthenticated = useAuthStore.getState().isAuthenticated;
 
-      // Don't redirect to login if already on a public auth page
       if (!isAuthenticated) {
+        // Already logged out — just reject so React state drives the redirect
         useAuthStore.getState().logout();
-        if (!isOnPublicAuthPage()) {
-          window.location.href = '/login';
-        }
         return Promise.reject(error);
       }
 
@@ -119,11 +102,9 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError as Error, null);
+        // Clear auth state — ProtectedRoute subscribes to isAuthenticated
+        // and will redirect to /login via React <Navigate> (no hard reload needed)
         useAuthStore.getState().logout();
-        // Don't redirect to login if already on a public auth page
-        if (!isOnPublicAuthPage()) {
-          window.location.href = '/login';
-        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
