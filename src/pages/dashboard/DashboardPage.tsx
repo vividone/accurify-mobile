@@ -19,6 +19,7 @@ import {
   UserGroupIcon,
   CubeIcon,
   ShoppingCartIcon,
+  ChartBarIcon,
 } from '@heroicons/react/24/outline';
 
 export function DashboardPage() {
@@ -46,6 +47,20 @@ export function DashboardPage() {
       color: 'text-success',
       bgColor: 'bg-success-light',
     },
+    ...(dashboard.netProfit != null
+      ? [
+          {
+            label: 'Net Profit',
+            value: formatCurrency(dashboard.netProfit),
+            icon: ChartBarIcon,
+            color: dashboard.netProfit >= 0 ? 'text-success' : 'text-danger',
+            bgColor: dashboard.netProfit >= 0 ? 'bg-success-light' : 'bg-danger-light',
+            sub: dashboard.grossMarginPercent != null
+              ? `${dashboard.grossMarginPercent.toFixed(1)}% margin`
+              : undefined,
+          },
+        ]
+      : []),
     {
       label: 'Outstanding',
       value: formatCurrency(dashboard.unpaidInvoicesTotal),

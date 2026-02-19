@@ -111,8 +111,15 @@ export function ProductDetailPage() {
   }
 
   const stockHistory = stockData?.content ?? [];
-  const margin = product.costPrice && product.costPrice > 0
-    ? (((product.unitPrice - product.costPrice) / product.costPrice) * 100).toFixed(1)
+  // Use WAC (averageCostPrice) for margin if available, otherwise fall back to static costPrice
+  const effectiveCost = (product.averageCostPrice && product.averageCostPrice > 0)
+    ? product.averageCostPrice
+    : product.costPrice;
+  const margin = effectiveCost && effectiveCost > 0
+    ? (((product.unitPrice - effectiveCost) / product.unitPrice) * 100).toFixed(1)
+    : null;
+  const inventoryValue = effectiveCost && effectiveCost > 0
+    ? effectiveCost * product.stockQuantity
     : null;
 
   return (
@@ -188,25 +195,38 @@ export function ProductDetailPage() {
             {product.outOfStock && <Badge variant="danger">Out of stock</Badge>}
             {product.lowStock && !product.outOfStock && <Badge variant="warning">Low stock</Badge>}
           </Card>
-          {product.costPrice != null && product.costPrice > 0 && (
+          {effectiveCost != null && effectiveCost > 0 && (
             <Card>
               <div className="flex items-center gap-2 mb-1">
                 <TagIcon className="w-4 h-4 text-gray-50" />
-                <span className="text-helper-01 text-gray-50">Cost Price</span>
+                <span className="text-helper-01 text-gray-50">
+                  {product.averageCostPrice && product.averageCostPrice > 0 ? 'Avg Cost (WAC)' : 'Cost Price'}
+                </span>
               </div>
               <p className="text-heading-03 text-gray-100 tabular-nums">
-                {formatCurrency(product.costPrice)}
+                {formatCurrency(effectiveCost)}
               </p>
             </Card>
           )}
           {margin && (
             <Card>
               <div className="flex items-center gap-2 mb-1">
-                <ChartBarIcon className="w-4 h-4 text-success" />
+                <ChartBarIcon className={`w-4 h-4 ${Number(margin) >= 0 ? 'text-success' : 'text-danger'}`} />
                 <span className="text-helper-01 text-gray-50">Margin</span>
               </div>
-              <p className="text-heading-03 text-success tabular-nums">
+              <p className={`text-heading-03 tabular-nums ${Number(margin) >= 0 ? 'text-success' : 'text-danger'}`}>
                 {margin}%
+              </p>
+            </Card>
+          )}
+          {inventoryValue != null && inventoryValue > 0 && (
+            <Card>
+              <div className="flex items-center gap-2 mb-1">
+                <CubeIcon className="w-4 h-4 text-primary" />
+                <span className="text-helper-01 text-gray-50">Inventory Value</span>
+              </div>
+              <p className="text-heading-03 text-primary tabular-nums text-[13px]">
+                {formatCurrency(inventoryValue)}
               </p>
             </Card>
           )}
@@ -302,9 +322,19 @@ export function ProductDetailPage() {
                   Available: {product.stockQuantity} {product.unit || 'pcs'}
                 </p>
               </div>
-              <p className="text-heading-02 text-gray-100">
-                Total: {formatCurrency(saleQty * product.unitPrice)}
-              </p>
+              <div className="space-y-1">
+                <p className="text-heading-02 text-gray-100">
+                  Total: {formatCurrency(saleQty * product.unitPrice)}
+                </p>
+                {effectiveCost != null && effectiveCost > 0 && (
+                  <p className="text-helper-01 text-gray-50">
+                    COGS: {formatCurrency(saleQty * effectiveCost)} · Profit:{' '}
+                    <span className={saleQty * product.unitPrice - saleQty * effectiveCost >= 0 ? 'text-success' : 'text-danger'}>
+                      {formatCurrency(saleQty * product.unitPrice - saleQty * effectiveCost)}
+                    </span>
+                  </p>
+                )}
+              </div>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowSaleModal(false)}

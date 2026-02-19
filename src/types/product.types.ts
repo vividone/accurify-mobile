@@ -20,6 +20,7 @@ export interface Product {
   imageUrl?: string;
   lowStock: boolean;
   outOfStock: boolean;
+  averageCostPrice?: number;
   profitMargin?: number;
   createdAt: string;
   updatedAt: string;

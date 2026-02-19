@@ -83,6 +83,13 @@ export function POSPage() {
   );
   const total = subtotal + tax;
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const totalCogs = cart.reduce((sum, item) => {
+    const cost = (item.product.averageCostPrice && item.product.averageCostPrice > 0)
+      ? item.product.averageCostPrice
+      : item.product.costPrice;
+    return sum + (cost && cost > 0 ? item.quantity * cost : 0);
+  }, 0);
+  const estimatedProfit = totalCogs > 0 ? subtotal - totalCogs : null;
 
   const handleCheckout = async () => {
     try {
@@ -290,6 +297,14 @@ export function POSPage() {
                 <span>Total</span>
                 <span className="tabular-nums">{formatCurrency(total)}</span>
               </div>
+              {estimatedProfit != null && (
+                <div className="flex justify-between text-body-01 text-gray-50 pt-1 border-t border-dashed border-gray-20">
+                  <span>Est. Profit</span>
+                  <span className={`tabular-nums font-medium ${estimatedProfit >= 0 ? 'text-success' : 'text-danger'}`}>
+                    {formatCurrency(estimatedProfit)}
+                  </span>
+                </div>
+              )}
               <button
                 onClick={handleCheckout}
                 disabled={cart.length === 0 || createOrder.isPending}
