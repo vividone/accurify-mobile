@@ -11,7 +11,7 @@ export type FixedAssetStatus = 'ACTIVE' | 'FULLY_DEPRECIATED' | 'DISPOSED';
 
 export type DepreciationMethod = 'STRAIGHT_LINE';
 
-export interface FixedAssetResponse {
+export interface FixedAsset {
   id: string;
   name: string;
   description: string;
