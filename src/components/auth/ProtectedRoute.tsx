@@ -1,15 +1,69 @@
+import { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth.store';
+import { authApi } from '@/services/api/auth.api';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuthStore();
-  const location = useLocation();
+/**
+ * Tracks whether the session has been validated in this browser session.
+ * Reset when logout() is called (isAuthenticated becomes false).
+ */
+let sessionValidated = false;
 
-  if (isLoading) {
+export function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const { isAuthenticated, isLoading, logout } = useAuthStore();
+  const location = useLocation();
+  const [validatingSession, setValidatingSession] = useState(
+    // Only need to validate if we think we're authenticated but haven't verified yet
+    isAuthenticated && !sessionValidated
+  );
+
+  useEffect(() => {
+    // Nothing to validate if not authenticated or already validated
+    if (!isAuthenticated || sessionValidated) {
+      setValidatingSession(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    const validateSession = async () => {
+      try {
+        // Try a token refresh to verify the session is still valid.
+        // If the refresh token is expired, this will fail with 401.
+        await authApi.refresh();
+        sessionValidated = true;
+      } catch {
+        // Session is expired — clear auth state and let the render
+        // cycle redirect to login via the <Navigate> below.
+        sessionValidated = false;
+        logout();
+      } finally {
+        if (!cancelled) {
+          setValidatingSession(false);
+        }
+      }
+    };
+
+    validateSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, logout]);
+
+  // Reset the validation flag when the user logs out so that
+  // the next login will re-validate.
+  useEffect(() => {
+    if (!isAuthenticated) {
+      sessionValidated = false;
+    }
+  }, [isAuthenticated]);
+
+  if (isLoading || validatingSession) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />

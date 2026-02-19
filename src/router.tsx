@@ -27,6 +27,7 @@ import { POSPage } from '@/pages/pos/POSPage';
 import { OrderListPage } from '@/pages/orders/OrderListPage';
 import { OrderDetailPage } from '@/pages/orders/OrderDetailPage';
 import { StockPage } from '@/pages/stock/StockPage';
+import { AssetListPage } from '@/pages/assets/AssetListPage';
 import { NotificationsPage } from '@/pages/notifications/NotificationsPage';
 import { SettingsPage } from '@/pages/settings/SettingsPage';
 import { HelpCenterPage } from '@/pages/help/HelpCenterPage';
@@ -94,6 +95,7 @@ export const router = createBrowserRouter([
       { path: 'orders', element: <OrderListPage /> },
       { path: 'orders/:id', element: <OrderDetailPage /> },
       { path: 'stock', element: <StockPage /> },
+      { path: 'assets', element: <AssetListPage /> },
       { path: 'notifications', element: <NotificationsPage /> },
       { path: 'settings', element: <SettingsPage /> },
       { path: 'transactions', element: <TransactionsPage /> },
