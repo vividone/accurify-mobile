@@ -7,6 +7,7 @@ import {
   useRecordProductSale,
   useStockHistoryByProduct,
   useUploadProductImage,
+  useToggleProductVisibility,
 } from '@/queries';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card } from '@/components/ui/Card';
@@ -26,6 +27,7 @@ import {
   ChartBarIcon,
   CameraIcon,
   PencilSquareIcon,
+  EyeIcon,
 } from '@heroicons/react/24/outline';
 
 export function ProductDetailPage() {
@@ -39,6 +41,7 @@ export function ProductDetailPage() {
   const activateProduct = useActivateProduct();
   const recordSale = useRecordProductSale();
   const uploadImage = useUploadProductImage();
+  const toggleVisibility = useToggleProductVisibility();
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   const [showSaleModal, setShowSaleModal] = useState(false);
@@ -81,6 +84,21 @@ export function ProductDetailPage() {
       }
     } catch {
       showNotification('Error', 'Action failed', 'error');
+    }
+  };
+
+  const handleToggleVisibility = async () => {
+    if (!product) return;
+    const newVisible = !product.isPublicVisible;
+    try {
+      await toggleVisibility.mutateAsync({ productId: product.id, visible: newVisible });
+      showNotification(
+        'Success',
+        newVisible ? 'Product is now visible on storefront' : 'Product hidden from storefront',
+        'success'
+      );
+    } catch {
+      showNotification('Error', 'Failed to update visibility', 'error');
     }
   };
 
@@ -254,6 +272,35 @@ export function ProductDetailPage() {
             </p>
           </Card>
         )}
+
+        {/* Storefront visibility toggle */}
+        <Card>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <EyeIcon className="w-4 h-4 text-gray-50" />
+              <span className="text-label-01 text-gray-70">Visible on Storefront</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleToggleVisibility}
+              disabled={toggleVisibility.isPending}
+              className={`relative w-11 h-6 rounded-full transition-colors ${
+                product.isPublicVisible !== false ? 'bg-primary' : 'bg-gray-30'
+              } ${toggleVisibility.isPending ? 'opacity-50' : ''}`}
+            >
+              <span
+                className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                  product.isPublicVisible !== false ? 'translate-x-5' : 'translate-x-0.5'
+                }`}
+              />
+            </button>
+          </div>
+          <p className="text-helper-01 text-gray-40 mt-1">
+            {product.isPublicVisible !== false
+              ? 'Customers can see this product on your storefront'
+              : 'This product is hidden from your storefront'}
+          </p>
+        </Card>
 
         {/* Recent stock movements */}
         {stockHistory.length > 0 && (
