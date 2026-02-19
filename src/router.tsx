@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { OnboardingGuard } from '@/components/auth/OnboardingGuard';
 import { GoodsRoute } from '@/components/auth/GoodsRoute';
+import { PremiumRoute } from '@/components/auth/PremiumRoute';
 import { MobileShell } from '@/components/layout/MobileShell';
 
 // Auth pages
@@ -101,7 +102,7 @@ export const router = createBrowserRouter([
       { path: 'orders/:id', element: <GoodsRoute><OrderDetailPage /></GoodsRoute> },
       { path: 'stock', element: <GoodsRoute><StockPage /></GoodsRoute> },
       { path: 'store', element: <GoodsRoute><StoreDashboardPage /></GoodsRoute> },
-      { path: 'assets', element: <AssetListPage /> },
+      { path: 'assets', element: <PremiumRoute promptType="glFeatureLocked"><AssetListPage /></PremiumRoute> },
       { path: 'notifications', element: <NotificationsPage /> },
       { path: 'settings', element: <SettingsPage /> },
       { path: 'transactions', element: <TransactionsPage /> },
