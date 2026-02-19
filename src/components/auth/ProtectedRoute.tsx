@@ -9,9 +9,15 @@ interface ProtectedRouteProps {
 
 /**
  * Tracks whether the session has been validated in this browser session.
- * Reset when logout() is called (isAuthenticated becomes false).
+ * Reset synchronously via resetSessionValidation() during logout,
+ * and also reactively via useEffect when isAuthenticated becomes false.
  */
 let sessionValidated = false;
+
+/** Call synchronously during logout to prevent race conditions. */
+export function resetSessionValidation() {
+  sessionValidated = false;
+}
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading, logout } = useAuthStore();

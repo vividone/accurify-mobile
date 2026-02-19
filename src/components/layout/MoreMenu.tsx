@@ -66,6 +66,7 @@ export function MoreMenu() {
       items: [
         { label: 'Income Statement', icon: DocumentChartBarIcon, onClick: () => go('/app/income-statement') },
         { label: 'Tax Overview', icon: ReceiptPercentIcon, onClick: () => go('/app/tax-overview') },
+        { label: 'Fixed Assets', icon: CubeIcon, onClick: () => go('/app/assets') },
       ],
     });
 

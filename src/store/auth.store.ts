@@ -2,6 +2,10 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { User } from '@/types';
 import { authApi } from '@/services/api/auth.api';
+import { useBusinessStore } from '@/store/business.store';
+import { useSubscriptionStore } from '@/store/subscription.store';
+import { queryClient } from '@/lib/queryClient';
+import { resetSessionValidation } from '@/components/auth/ProtectedRoute';
 
 /**
  * SECURITY: Auth state no longer stores tokens in localStorage (FE-001, FE-003)
@@ -19,6 +23,21 @@ interface AuthState {
   logout: () => void;
   logoutAsync: () => Promise<void>; // SECURITY: Async logout with backend cookie clearing (FE-012)
   setLoading: (loading: boolean) => void;
+}
+
+/**
+ * Clear all client-side state from other stores and caches.
+ * Called by both sync logout (401 interceptor) and async logout (user-initiated).
+ */
+function clearAllClientState() {
+  // Clear persisted business data (localStorage)
+  useBusinessStore.getState().clearBusiness();
+  // Clear in-memory subscription data
+  useSubscriptionStore.getState().clearSubscription();
+  // Clear all React Query cached data
+  queryClient.clear();
+  // Reset session validation flag synchronously
+  resetSessionValidation();
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -39,12 +58,14 @@ export const useAuthStore = create<AuthState>()(
 
       setUser: (user) => set({ user }),
 
-      logout: () =>
+      logout: () => {
+        clearAllClientState();
         set({
           user: null,
           isAuthenticated: false,
           isLoading: false,
-        }),
+        });
+      },
 
       // SECURITY: Async logout that clears httpOnly cookies on backend (FE-012)
       logoutAsync: async () => {
@@ -57,7 +78,10 @@ export const useAuthStore = create<AuthState>()(
           console.warn('Backend logout failed, clearing local state anyway');
         }
 
-        // Clear local state
+        // Clear all client-side state (business, subscription, query cache)
+        clearAllClientState();
+
+        // Clear auth state
         set({
           user: null,
           isAuthenticated: false,
