@@ -186,9 +186,16 @@ export function ProductListPage() {
                     <p className="text-body-01 font-medium tabular-nums text-gray-100">
                       {formatCurrency(product.unitPrice)}
                     </p>
-                    <p className="text-helper-01 text-gray-40 tabular-nums">
-                      {formatNumber(product.stockQuantity)} in stock
-                    </p>
+                    <div className="flex items-center justify-end gap-1.5">
+                      <p className="text-helper-01 text-gray-40 tabular-nums">
+                        {formatNumber(product.stockQuantity)} in stock
+                      </p>
+                      {product.profitMargin != null && product.profitMargin > 0 && (
+                        <span className={`text-helper-01 font-medium tabular-nums ${product.profitMargin >= 20 ? 'text-success' : product.profitMargin >= 10 ? 'text-warning-dark' : 'text-danger'}`}>
+                          {product.profitMargin.toFixed(0)}%
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </Card>

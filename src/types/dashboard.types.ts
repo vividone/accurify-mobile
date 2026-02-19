@@ -29,4 +29,8 @@ export interface DashboardData {
   lastMonthRevenue: number;
   revenueChangePercent: number;
   recentActivity: RecentActivity[];
+  // Profit metrics from COGS Engine
+  grossProfit?: number;
+  netProfit?: number;
+  grossMarginPercent?: number;
 }
