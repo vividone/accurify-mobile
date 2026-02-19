@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { OnboardingGuard } from '@/components/auth/OnboardingGuard';
+import { GoodsRoute } from '@/components/auth/GoodsRoute';
 import { MobileShell } from '@/components/layout/MobileShell';
 
 // Auth pages
@@ -23,10 +24,12 @@ import { ClientDetailPage } from '@/pages/clients/ClientDetailPage';
 import { ProductListPage } from '@/pages/products/ProductListPage';
 import { ProductCreatePage } from '@/pages/products/ProductCreatePage';
 import { ProductDetailPage } from '@/pages/products/ProductDetailPage';
+import { ProductEditPage } from '@/pages/products/ProductEditPage';
 import { POSPage } from '@/pages/pos/POSPage';
 import { OrderListPage } from '@/pages/orders/OrderListPage';
 import { OrderDetailPage } from '@/pages/orders/OrderDetailPage';
 import { StockPage } from '@/pages/stock/StockPage';
+import { StoreDashboardPage } from '@/pages/store/StoreDashboardPage';
 import { AssetListPage } from '@/pages/assets/AssetListPage';
 import { NotificationsPage } from '@/pages/notifications/NotificationsPage';
 import { SettingsPage } from '@/pages/settings/SettingsPage';
@@ -88,13 +91,16 @@ export const router = createBrowserRouter([
       { path: 'clients', element: <ClientListPage /> },
       { path: 'clients/new', element: <ClientCreatePage /> },
       { path: 'clients/:id', element: <ClientDetailPage /> },
-      { path: 'products', element: <ProductListPage /> },
-      { path: 'products/new', element: <ProductCreatePage /> },
-      { path: 'products/:id', element: <ProductDetailPage /> },
-      { path: 'pos', element: <POSPage /> },
-      { path: 'orders', element: <OrderListPage /> },
-      { path: 'orders/:id', element: <OrderDetailPage /> },
-      { path: 'stock', element: <StockPage /> },
+      // GOODS-only routes (products, stock, POS, orders, store)
+      { path: 'products', element: <GoodsRoute><ProductListPage /></GoodsRoute> },
+      { path: 'products/new', element: <GoodsRoute><ProductCreatePage /></GoodsRoute> },
+      { path: 'products/:id', element: <GoodsRoute><ProductDetailPage /></GoodsRoute> },
+      { path: 'products/:id/edit', element: <GoodsRoute><ProductEditPage /></GoodsRoute> },
+      { path: 'pos', element: <GoodsRoute><POSPage /></GoodsRoute> },
+      { path: 'orders', element: <GoodsRoute><OrderListPage /></GoodsRoute> },
+      { path: 'orders/:id', element: <GoodsRoute><OrderDetailPage /></GoodsRoute> },
+      { path: 'stock', element: <GoodsRoute><StockPage /></GoodsRoute> },
+      { path: 'store', element: <GoodsRoute><StoreDashboardPage /></GoodsRoute> },
       { path: 'assets', element: <AssetListPage /> },
       { path: 'notifications', element: <NotificationsPage /> },
       { path: 'settings', element: <SettingsPage /> },
