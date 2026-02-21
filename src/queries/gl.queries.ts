@@ -118,8 +118,11 @@ export interface BalanceSheetSection {
   total: number;
 }
 
+export type AccountingBasis = 'ACCRUAL' | 'CASH';
+
 export interface BalanceSheetReport {
   asOfDate: string;
+  basis?: AccountingBasis;
   assets: BalanceSheetSection;
   liabilities: BalanceSheetSection;
   equity: BalanceSheetSection;
@@ -144,6 +147,7 @@ export interface CashFlowSection {
 export interface CashFlowReport {
   startDate: string;
   endDate: string;
+  basis?: AccountingBasis;
   operatingActivities: CashFlowSection;
   investingActivities: CashFlowSection;
   financingActivities: CashFlowSection;
@@ -168,6 +172,7 @@ export interface IncomeStatementSection {
 export interface IncomeStatementReport {
   startDate: string;
   endDate: string;
+  basis?: AccountingBasis;
   revenue: IncomeStatementSection;
   costOfSales: IncomeStatementSection;
   grossProfit: number;
@@ -175,6 +180,122 @@ export interface IncomeStatementReport {
   operatingIncome: number;
   otherIncomeExpenses: IncomeStatementSection;
   netIncome: number;
+}
+
+// Aging Report Types
+export interface AgingBucket {
+  label: string;
+  startDays: number;
+  endDays: number;
+  amount: number;
+  count: number;
+}
+
+export interface AgingPartyTotal {
+  partyId: string;
+  partyName: string;
+  totalAmount: number;
+  count: number;
+  currentAmount: number;
+  days1to30: number;
+  days31to60: number;
+  days61to90: number;
+  over90: number;
+}
+
+export interface AgingReport {
+  reportType: 'AR_AGING' | 'AP_AGING';
+  asOfDate: string;
+  totalOutstanding: number;
+  totalCount: number;
+  buckets: AgingBucket[];
+  partyTotals: AgingPartyTotal[];
+}
+
+// Product Profitability Types
+export interface ProductProfitabilityLine {
+  productId: string;
+  productName: string;
+  sku: string | null;
+  quantitySold: number;
+  revenue: number;
+  costOfGoodsSold: number;
+  grossProfit: number;
+  grossMarginPercent: number;
+  averageSellPrice: number;
+  averageCostPrice: number;
+}
+
+export interface ProductProfitabilityReport {
+  startDate: string;
+  endDate: string;
+  totalProducts: number;
+  totalRevenue: number;
+  totalCogs: number;
+  totalGrossProfit: number;
+  averageGrossMargin: number;
+  products: ProductProfitabilityLine[];
+}
+
+// Cash Flow Forecast Types
+export interface ForecastPeriod {
+  label: string;
+  days: number;
+  expectedInflows: number;
+  expectedOutflows: number;
+  netCashFlow: number;
+  projectedBalance: number;
+}
+
+export interface UpcomingPayable {
+  billId: string;
+  supplierName: string;
+  amount: number;
+  dueDate: string;
+  daysUntilDue: number;
+}
+
+export interface UpcomingReceivable {
+  invoiceId: string;
+  invoiceNumber: string;
+  clientName: string;
+  amount: number;
+  dueDate: string;
+  daysUntilDue: number;
+}
+
+export interface CashFlowForecast {
+  asOfDate: string;
+  currentCashBalance: number;
+  periods: ForecastPeriod[];
+  totalExpectedInflows: number;
+  totalExpectedOutflows: number;
+  upcomingPayables: UpcomingPayable[];
+  upcomingReceivables: UpcomingReceivable[];
+}
+
+// Margin Trend Types
+export interface MonthlyMargin {
+  month: string;
+  revenue: number;
+  cogs: number;
+  grossProfit: number;
+  marginPercent: number;
+}
+
+export interface MarginAlert {
+  severity: 'INFO' | 'WARNING' | 'CRITICAL';
+  message: string;
+  period: string;
+}
+
+export interface MarginTrendReport {
+  currentMonthMargin: number;
+  previousMonthMargin: number;
+  changePercent: number;
+  trend: 'UP' | 'DOWN' | 'STABLE';
+  monthlyData: MonthlyMargin[];
+  alerts: MarginAlert[];
 }
 
 export interface PageResponse<T> {
@@ -196,9 +317,11 @@ export const glKeys = {
   accountsByType: (type: string, businessId?: string) => [...glKeys.forBusiness(businessId), 'accounts', type] as const,
   account: (id: string, businessId?: string) => [...glKeys.forBusiness(businessId), 'account', id] as const,
   trialBalance: (businessId?: string) => [...glKeys.forBusiness(businessId), 'trial-balance'] as const,
-  balanceSheet: (asOf?: string, businessId?: string) => [...glKeys.forBusiness(businessId), 'balance-sheet', asOf] as const,
-  cashFlow: (from?: string, to?: string, businessId?: string) => [...glKeys.forBusiness(businessId), 'cash-flow', { from, to }] as const,
-  incomeStatement: (from?: string, to?: string, businessId?: string) => [...glKeys.forBusiness(businessId), 'income-statement', { from, to }] as const,
+  balanceSheet: (asOf?: string, basis?: AccountingBasis, businessId?: string) => [...glKeys.forBusiness(businessId), 'balance-sheet', asOf, basis] as const,
+  cashFlow: (from?: string, to?: string, basis?: AccountingBasis, businessId?: string) => [...glKeys.forBusiness(businessId), 'cash-flow', { from, to, basis }] as const,
+  incomeStatement: (from?: string, to?: string, basis?: AccountingBasis, businessId?: string) => [...glKeys.forBusiness(businessId), 'income-statement', { from, to, basis }] as const,
+  arAging: (asOf?: string, businessId?: string) => [...glKeys.forBusiness(businessId), 'ar-aging', asOf] as const,
+  apAging: (asOf?: string, businessId?: string) => [...glKeys.forBusiness(businessId), 'ap-aging', asOf] as const,
   journals: (page?: number, size?: number, status?: string, businessId?: string) => [...glKeys.forBusiness(businessId), 'journals', { page, size, status }] as const,
   journal: (id: string, businessId?: string) => [...glKeys.forBusiness(businessId), 'journal', id] as const,
   messyPile: (page?: number, size?: number, businessId?: string) => [...glKeys.forBusiness(businessId), 'messy-pile', { page, size }] as const,
@@ -206,6 +329,12 @@ export const glKeys = {
   taxSummary: (businessId?: string) => [...glKeys.forBusiness(businessId), 'tax-summary'] as const,
   accountLedger: (accountId: string, page?: number, size?: number, from?: string, to?: string, businessId?: string) =>
     [...glKeys.forBusiness(businessId), 'account-ledger', accountId, { page, size, from, to }] as const,
+  productProfitability: (from?: string, to?: string, businessId?: string) =>
+    [...glKeys.forBusiness(businessId), 'product-profitability', { from, to }] as const,
+  cashFlowForecast: (businessId?: string) =>
+    [...glKeys.forBusiness(businessId), 'cash-flow-forecast'] as const,
+  marginTrend: (months?: number, businessId?: string) =>
+    [...glKeys.forBusiness(businessId), 'margin-trend', months] as const,
 };
 
 // ==================== API Functions ====================
@@ -292,18 +421,22 @@ const glApi = {
     return response.data;
   },
 
-  getBalanceSheet: async (asOf?: string, businessId?: string): Promise<BalanceSheetReport> => {
-    const params = asOf ? `?asOf=${asOf}` : '';
-    const response = await apiClient.get<BalanceSheetReport>(`/gl/balance-sheet${params}`, {
+  getBalanceSheet: async (asOf?: string, basis?: AccountingBasis, businessId?: string): Promise<BalanceSheetReport> => {
+    const params = new URLSearchParams();
+    if (asOf) params.append('asOf', asOf);
+    if (basis) params.append('basis', basis);
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+    const response = await apiClient.get<BalanceSheetReport>(`/gl/balance-sheet${queryString}`, {
       headers: buildHeaders(businessId),
     });
     return response.data;
   },
 
-  getCashFlow: async (from?: string, to?: string, businessId?: string): Promise<CashFlowReport> => {
+  getCashFlow: async (from?: string, to?: string, basis?: AccountingBasis, businessId?: string): Promise<CashFlowReport> => {
     const params = new URLSearchParams();
     if (from) params.append('from', from);
     if (to) params.append('to', to);
+    if (basis) params.append('basis', basis);
     const queryString = params.toString() ? `?${params.toString()}` : '';
     const response = await apiClient.get<CashFlowReport>(`/gl/cash-flow${queryString}`, {
       headers: buildHeaders(businessId),
@@ -311,12 +444,29 @@ const glApi = {
     return response.data;
   },
 
-  getIncomeStatement: async (from?: string, to?: string, businessId?: string): Promise<IncomeStatementReport> => {
+  getIncomeStatement: async (from?: string, to?: string, basis?: AccountingBasis, businessId?: string): Promise<IncomeStatementReport> => {
     const params = new URLSearchParams();
     if (from) params.append('from', from);
     if (to) params.append('to', to);
+    if (basis) params.append('basis', basis);
     const queryString = params.toString() ? `?${params.toString()}` : '';
     const response = await apiClient.get<IncomeStatementReport>(`/gl/income-statement${queryString}`, {
+      headers: buildHeaders(businessId),
+    });
+    return response.data;
+  },
+
+  getArAging: async (asOf?: string, businessId?: string): Promise<AgingReport> => {
+    const params = asOf ? `?asOf=${asOf}` : '';
+    const response = await apiClient.get<AgingReport>(`/gl/ar-aging${params}`, {
+      headers: buildHeaders(businessId),
+    });
+    return response.data;
+  },
+
+  getApAging: async (asOf?: string, businessId?: string): Promise<AgingReport> => {
+    const params = asOf ? `?asOf=${asOf}` : '';
+    const response = await apiClient.get<AgingReport>(`/gl/ap-aging${params}`, {
       headers: buildHeaders(businessId),
     });
     return response.data;
@@ -337,6 +487,32 @@ const glApi = {
       `/gl/accounts/${accountId}/ledger?${params}`,
       { headers: buildHeaders(businessId) }
     );
+    return response.data;
+  },
+
+  getProductProfitability: async (from?: string, to?: string, businessId?: string): Promise<ProductProfitabilityReport> => {
+    const params = new URLSearchParams();
+    if (from) params.append('from', from);
+    if (to) params.append('to', to);
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+    const response = await apiClient.get<ProductProfitabilityReport>(`/gl/product-profitability${queryString}`, {
+      headers: buildHeaders(businessId),
+    });
+    return response.data;
+  },
+
+  getCashFlowForecast: async (businessId?: string): Promise<CashFlowForecast> => {
+    const response = await apiClient.get<CashFlowForecast>('/gl/cash-flow-forecast', {
+      headers: buildHeaders(businessId),
+    });
+    return response.data;
+  },
+
+  getMarginTrend: async (months?: number, businessId?: string): Promise<MarginTrendReport> => {
+    const params = months ? `?months=${months}` : '';
+    const response = await apiClient.get<MarginTrendReport>(`/gl/margin-trend${params}`, {
+      headers: buildHeaders(businessId),
+    });
     return response.data;
   },
 
@@ -510,14 +686,15 @@ export const useTaxSummary = (businessId?: string) => {
 /**
  * Hook to get balance sheet report
  * @param asOf - As of date (YYYY-MM-DD format)
+ * @param basis - Optional accounting basis (ACCRUAL or CASH)
  * @param businessId - Optional businessId for accountant access to client data
  */
-export const useBalanceSheet = (asOf?: string, businessId?: string) => {
+export const useBalanceSheet = (asOf?: string, basis?: AccountingBasis, businessId?: string) => {
   const hasPremiumAccess = usePremiumAccess();
 
   return useQuery({
-    queryKey: glKeys.balanceSheet(asOf, businessId),
-    queryFn: () => glApi.getBalanceSheet(asOf, businessId),
+    queryKey: glKeys.balanceSheet(asOf, basis, businessId),
+    queryFn: () => glApi.getBalanceSheet(asOf, basis, businessId),
     enabled: hasPremiumAccess,
   });
 };
@@ -526,14 +703,15 @@ export const useBalanceSheet = (asOf?: string, businessId?: string) => {
  * Hook to get cash flow report
  * @param from - Start date (YYYY-MM-DD format)
  * @param to - End date (YYYY-MM-DD format)
+ * @param basis - Optional accounting basis (ACCRUAL or CASH)
  * @param businessId - Optional businessId for accountant access to client data
  */
-export const useCashFlow = (from?: string, to?: string, businessId?: string) => {
+export const useCashFlow = (from?: string, to?: string, basis?: AccountingBasis, businessId?: string) => {
   const hasPremiumAccess = usePremiumAccess();
 
   return useQuery({
-    queryKey: glKeys.cashFlow(from, to, businessId),
-    queryFn: () => glApi.getCashFlow(from, to, businessId),
+    queryKey: glKeys.cashFlow(from, to, basis, businessId),
+    queryFn: () => glApi.getCashFlow(from, to, basis, businessId),
     enabled: hasPremiumAccess,
   });
 };
@@ -542,14 +720,45 @@ export const useCashFlow = (from?: string, to?: string, businessId?: string) => 
  * Hook to get income statement (profit & loss) report
  * @param from - Start date (YYYY-MM-DD format)
  * @param to - End date (YYYY-MM-DD format)
+ * @param basis - Optional accounting basis (ACCRUAL or CASH)
  * @param businessId - Optional businessId for accountant access to client data
  */
-export const useIncomeStatement = (from?: string, to?: string, businessId?: string) => {
+export const useIncomeStatement = (from?: string, to?: string, basis?: AccountingBasis, businessId?: string) => {
   const hasPremiumAccess = usePremiumAccess();
 
   return useQuery({
-    queryKey: glKeys.incomeStatement(from, to, businessId),
-    queryFn: () => glApi.getIncomeStatement(from, to, businessId),
+    queryKey: glKeys.incomeStatement(from, to, basis, businessId),
+    queryFn: () => glApi.getIncomeStatement(from, to, basis, businessId),
+    enabled: hasPremiumAccess,
+  });
+};
+
+/**
+ * Hook to get AR aging report
+ * @param asOf - As of date (YYYY-MM-DD format)
+ * @param businessId - Optional businessId for accountant access to client data
+ */
+export const useArAging = (asOf?: string, businessId?: string) => {
+  const hasPremiumAccess = usePremiumAccess();
+
+  return useQuery({
+    queryKey: glKeys.arAging(asOf, businessId),
+    queryFn: () => glApi.getArAging(asOf, businessId),
+    enabled: hasPremiumAccess,
+  });
+};
+
+/**
+ * Hook to get AP aging report
+ * @param asOf - As of date (YYYY-MM-DD format)
+ * @param businessId - Optional businessId for accountant access to client data
+ */
+export const useApAging = (asOf?: string, businessId?: string) => {
+  const hasPremiumAccess = usePremiumAccess();
+
+  return useQuery({
+    queryKey: glKeys.apAging(asOf, businessId),
+    queryFn: () => glApi.getApAging(asOf, businessId),
     enabled: hasPremiumAccess,
   });
 };
@@ -577,6 +786,51 @@ export const useAccountLedger = (
     queryKey: glKeys.accountLedger(accountId, page, size, from, to, businessId),
     queryFn: () => glApi.getAccountLedger(accountId, page, size, from, to, businessId),
     enabled: hasPremiumAccess && !!accountId,
+  });
+};
+
+/**
+ * Hook to get product profitability report
+ * @param from - Start date (YYYY-MM-DD format)
+ * @param to - End date (YYYY-MM-DD format)
+ * @param businessId - Optional businessId for accountant access to client data
+ */
+export const useProductProfitability = (from?: string, to?: string, businessId?: string) => {
+  const hasPremiumAccess = usePremiumAccess();
+
+  return useQuery({
+    queryKey: glKeys.productProfitability(from, to, businessId),
+    queryFn: () => glApi.getProductProfitability(from, to, businessId),
+    enabled: hasPremiumAccess,
+  });
+};
+
+/**
+ * Hook to get cash flow forecast
+ * @param businessId - Optional businessId for accountant access to client data
+ */
+export const useCashFlowForecast = (businessId?: string) => {
+  const hasPremiumAccess = usePremiumAccess();
+
+  return useQuery({
+    queryKey: glKeys.cashFlowForecast(businessId),
+    queryFn: () => glApi.getCashFlowForecast(businessId),
+    enabled: hasPremiumAccess,
+  });
+};
+
+/**
+ * Hook to get margin trend report
+ * @param months - Number of months to include (default 6)
+ * @param businessId - Optional businessId for accountant access to client data
+ */
+export const useMarginTrend = (months?: number, businessId?: string) => {
+  const hasPremiumAccess = usePremiumAccess();
+
+  return useQuery({
+    queryKey: glKeys.marginTrend(months, businessId),
+    queryFn: () => glApi.getMarginTrend(months, businessId),
+    enabled: hasPremiumAccess,
   });
 };
 

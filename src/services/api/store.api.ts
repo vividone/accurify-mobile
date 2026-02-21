@@ -15,6 +15,7 @@ import type {
   OrderPaymentStatus,
 } from '@/types/store.types';
 import type { ApiResponse, PageResponse } from '@/types/api.types';
+import type { Product } from '@/types/product.types';
 
 const STORE_BASE = '/store';
 
@@ -247,6 +248,34 @@ export const storeApi = {
     const response = await apiClient.get<ApiResponse<BankAccountResolution>>(`${STORE_BASE}/payments/resolve-account`, {
       params: { accountNumber, bankCode },
     });
+    return response.data;
+  },
+
+  // ==================== Product Visibility ====================
+
+  /**
+   * Toggle product visibility on storefront
+   */
+  toggleProductVisibility: async (productId: string, visible: boolean): Promise<ApiResponse<Product>> => {
+    const response = await apiClient.post<ApiResponse<Product>>(
+      `${STORE_BASE}/products/${productId}/visibility`,
+      null,
+      { params: { visible } }
+    );
+    return response.data;
+  },
+
+  // ==================== Storefront Display % ====================
+
+  /**
+   * Set the percentage of products displayed on storefront
+   */
+  setStorefrontPercentage: async (percentage: number): Promise<ApiResponse<number>> => {
+    const response = await apiClient.post<ApiResponse<number>>(
+      `${STORE_BASE}/products/storefront-percentage`,
+      null,
+      { params: { percentage } }
+    );
     return response.data;
   },
 };

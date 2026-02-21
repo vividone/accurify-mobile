@@ -1,6 +1,8 @@
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDashboard } from '@/queries';
+import { useCashFlowForecast, useMarginTrend } from '@/queries/gl.queries';
+import type { CashFlowForecast, MarginTrendReport } from '@/queries/gl.queries';
 import { Card } from '@/components/ui/Card';
 import { DashboardSkeleton } from '@/components/ui/Skeleton';
 import { formatCurrency } from '@/utils/currency';
@@ -14,6 +16,7 @@ import {
   ClockIcon,
   ExclamationTriangleIcon,
   ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
   DocumentTextIcon,
   ClipboardDocumentListIcon,
   UserGroupIcon,
@@ -22,15 +25,109 @@ import {
   ChartBarIcon,
 } from '@heroicons/react/24/outline';
 
+function CashFlowForecastSection({ forecast }: { forecast: CashFlowForecast }) {
+  return (
+    <div>
+      <h2 className="text-heading-01 text-gray-100 mb-3">Cash Flow Forecast</h2>
+      <Card className="mb-3">
+        <p className="text-label-01 text-gray-50">Current Cash Balance</p>
+        <p className="text-heading-03 font-semibold tabular-nums text-gray-100">
+          {formatCurrency(forecast.currentCashBalance)}
+        </p>
+      </Card>
+      <div className="space-y-2">
+        {forecast.periods.map((period) => {
+          const isPositive = period.netCashFlow >= 0;
+          return (
+            <Card key={period.label}>
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-label-01 font-medium text-gray-70">{period.label}</p>
+                <span className={`text-helper-01 font-medium ${isPositive ? 'text-green-700' : 'text-red-700'}`}>
+                  {isPositive ? '+' : ''}{formatCurrency(period.netCashFlow)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <p className="text-helper-01 text-gray-40">Projected balance</p>
+                <p className="text-body-01 font-semibold tabular-nums text-gray-100">
+                  {formatCurrency(period.projectedBalance)}
+                </p>
+              </div>
+              <div className="flex items-center gap-3 mt-1 text-helper-01 text-gray-40">
+                <span>In: {formatCurrency(period.expectedInflows)}</span>
+                <span>Out: {formatCurrency(period.expectedOutflows)}</span>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function MarginTrendSection({ trend }: { trend: MarginTrendReport }) {
+  const trendIcon = trend.trend === 'UP'
+    ? <ArrowTrendingUpIcon className="w-5 h-5 text-success" />
+    : trend.trend === 'DOWN'
+      ? <ArrowTrendingDownIcon className="w-5 h-5 text-danger" />
+      : <ChartBarIcon className="w-5 h-5 text-gray-50" />;
+
+  const trendColor = trend.trend === 'UP' ? 'text-success' : trend.trend === 'DOWN' ? 'text-danger' : 'text-gray-70';
+
+  const latestAlert = trend.alerts.length > 0 ? trend.alerts[trend.alerts.length - 1] : null;
+
+  return (
+    <div>
+      <h2 className="text-heading-01 text-gray-100 mb-3">Gross Margin Trend</h2>
+      <Card>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            {trendIcon}
+            <p className="text-heading-03 font-semibold tabular-nums text-gray-100">
+              {trend.currentMonthMargin.toFixed(1)}%
+            </p>
+          </div>
+          <div className="text-right">
+            <p className={`text-body-01 font-medium tabular-nums ${trendColor}`}>
+              {trend.changePercent >= 0 ? '+' : ''}{trend.changePercent.toFixed(1)}%
+            </p>
+            <p className="text-helper-01 text-gray-40">vs last month</p>
+          </div>
+        </div>
+        <p className="text-helper-01 text-gray-40">
+          Previous month: {trend.previousMonthMargin.toFixed(1)}%
+        </p>
+      </Card>
+      {latestAlert && (
+        <div className={`mt-2 rounded-lg px-3 py-2 ${
+          latestAlert.severity === 'CRITICAL' ? 'bg-red-50' :
+          latestAlert.severity === 'WARNING' ? 'bg-yellow-50' : 'bg-blue-50'
+        }`}>
+          <p className={`text-helper-01 font-medium ${
+            latestAlert.severity === 'CRITICAL' ? 'text-red-700' :
+            latestAlert.severity === 'WARNING' ? 'text-yellow-700' : 'text-blue-700'
+          }`}>
+            {latestAlert.message}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function DashboardPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: dashboard, isLoading } = useDashboard();
+  const { data: cashFlowForecast, isLoading: isCashFlowLoading } = useCashFlowForecast();
+  const { data: marginTrend, isLoading: isMarginLoading } = useMarginTrend(6);
   const business = useBusinessStore((s) => s.business);
   const isGoodsBusiness = business?.type === BusinessType.GOODS;
 
   const handleRefresh = useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
+      queryClient.invalidateQueries({ queryKey: ['gl'] }),
+    ]);
   }, [queryClient]);
 
   const { containerRef, PullIndicator } = usePullToRefresh({ onRefresh: handleRefresh });
@@ -193,6 +290,16 @@ export function DashboardPage() {
             </div>
           </Card>
         </div>
+      )}
+
+      {/* Cash Flow Forecast - premium only */}
+      {!isCashFlowLoading && cashFlowForecast && (
+        <CashFlowForecastSection forecast={cashFlowForecast} />
+      )}
+
+      {/* Margin Trend - premium only */}
+      {!isMarginLoading && marginTrend && (
+        <MarginTrendSection trend={marginTrend} />
       )}
     </div>
   );

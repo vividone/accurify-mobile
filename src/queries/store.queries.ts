@@ -4,6 +4,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { storeApi } from '@/services/api/store.api';
 import { addonKeys } from './addon.queries';
+import { productKeys } from './products.queries';
 import type {
   StoreRequest,
   OrderRequest,
@@ -423,6 +424,41 @@ export function useSetupPaymentAccount() {
     onError: (error) => {
       // Log error but don't propagate in a way that could trigger auth issues
       console.error('Failed to setup payment account:', error);
+    },
+  });
+}
+
+// ==================== Product Visibility ====================
+
+/**
+ * Toggle product visibility on storefront
+ */
+export function useToggleProductVisibility() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ productId, visible }: { productId: string; visible: boolean }) =>
+      storeApi.toggleProductVisibility(productId, visible),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: storeKeys.all });
+      queryClient.invalidateQueries({ queryKey: productKeys.all });
+    },
+  });
+}
+
+// ==================== Storefront Display % ====================
+
+/**
+ * Set the percentage of products displayed on storefront
+ */
+export function useSetStorefrontPercentage() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (percentage: number) => storeApi.setStorefrontPercentage(percentage),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: storeKeys.all });
+      queryClient.invalidateQueries({ queryKey: productKeys.all });
     },
   });
 }

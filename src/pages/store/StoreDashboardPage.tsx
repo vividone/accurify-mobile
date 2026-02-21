@@ -1,11 +1,12 @@
-import { useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMyStore, usePendingOrdersCount, useOrders, useProductSummary } from '@/queries';
+import { useMyStore, usePendingOrdersCount, useOrders, useProductSummary, useSetStorefrontPercentage } from '@/queries';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { DashboardSkeleton } from '@/components/ui/Skeleton';
+import { useUIStore } from '@/store/ui.store';
 import { formatCurrency } from '@/utils/currency';
 import { formatDate } from '@/utils/date';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
@@ -18,6 +19,7 @@ import {
   CurrencyDollarIcon,
   CubeIcon,
   LinkIcon,
+  AdjustmentsHorizontalIcon,
 } from '@heroicons/react/24/outline';
 
 const orderStatusVariant: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'gray' | 'purple'> = {
@@ -32,11 +34,14 @@ const orderStatusVariant: Record<string, 'success' | 'warning' | 'danger' | 'inf
 export function StoreDashboardPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const showNotification = useUIStore((s) => s.showNotification);
   const { data: store, isLoading: storeLoading } = useMyStore();
   const { data: pendingCount } = usePendingOrdersCount(!!store);
   const { data: recentOrdersData } = useOrders(0, 5);
   const { data: productSummary } = useProductSummary();
+  const setStorefrontPercentage = useSetStorefrontPercentage();
 
+  const [displayPercentage, setDisplayPercentage] = useState(100);
   const recentOrders = recentOrdersData?.content ?? [];
 
   const handleRefresh = useCallback(async () => {
@@ -45,6 +50,15 @@ export function StoreDashboardPage() {
   }, [queryClient]);
 
   const { containerRef, PullIndicator } = usePullToRefresh({ onRefresh: handleRefresh });
+
+  const handleApplyPercentage = async () => {
+    try {
+      await setStorefrontPercentage.mutateAsync(displayPercentage);
+      showNotification('Success', `Storefront now displays ${displayPercentage}% of products`, 'success');
+    } catch {
+      showNotification('Error', 'Failed to update storefront display percentage', 'error');
+    }
+  };
 
   if (storeLoading) {
     return <DashboardSkeleton />;
@@ -170,6 +184,42 @@ export function StoreDashboardPage() {
                 {store.deliveryAvailable ? 'Yes' : 'No'}
               </Badge>
             </div>
+          </div>
+        </Card>
+
+        {/* Storefront Display % */}
+        <Card>
+          <div className="flex items-center gap-2 mb-3">
+            <AdjustmentsHorizontalIcon className="w-4 h-4 text-primary" />
+            <p className="text-label-01 text-gray-70">Storefront Display</p>
+          </div>
+          <p className="text-helper-01 text-gray-50 mb-3">
+            Display % of Products on Storefront
+          </p>
+          <div className="space-y-3">
+            <div>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={5}
+                value={displayPercentage}
+                onChange={(e) => setDisplayPercentage(Number(e.target.value))}
+                className="w-full h-2 bg-gray-20 rounded-full appearance-none cursor-pointer accent-primary [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow"
+              />
+              <div className="flex items-center justify-between mt-1">
+                <span className="text-helper-01 text-gray-40">0%</span>
+                <span className="text-heading-02 text-primary tabular-nums">{displayPercentage}%</span>
+                <span className="text-helper-01 text-gray-40">100%</span>
+              </div>
+            </div>
+            <button
+              onClick={handleApplyPercentage}
+              disabled={setStorefrontPercentage.isPending}
+              className="w-full h-10 bg-primary text-white font-medium text-body-01 rounded-lg disabled:opacity-50"
+            >
+              {setStorefrontPercentage.isPending ? 'Applying...' : 'Apply'}
+            </button>
           </div>
         </Card>
 

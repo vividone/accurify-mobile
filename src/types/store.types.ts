@@ -164,6 +164,9 @@ export interface StoreOrder {
   cancelledAt?: string;
   cancellationReason?: string;
   notes?: string;
+  paymentProofUrl?: string;
+  paymentProofSubmittedAt?: string;
+  paymentProofNote?: string;
   items: OrderItem[];
   createdAt: string;
   updatedAt: string;
