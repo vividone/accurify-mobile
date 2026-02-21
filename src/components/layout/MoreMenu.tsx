@@ -19,6 +19,7 @@ import {
   SparklesIcon,
   ClockIcon,
   XMarkIcon,
+  ChartBarSquareIcon,
 } from '@heroicons/react/24/outline';
 import { useUIStore } from '@/store/ui.store';
 import { useAuthStore } from '@/store/auth.store';
@@ -68,6 +69,7 @@ export function MoreMenu() {
         { label: 'Income Statement', icon: DocumentChartBarIcon, onClick: () => go('/app/income-statement') },
         { label: 'AR Aging', icon: ClockIcon, onClick: () => go('/app/ar-aging') },
         { label: 'AP Aging', icon: ClockIcon, onClick: () => go('/app/ap-aging') },
+        { label: 'Product Profitability', icon: ChartBarSquareIcon, onClick: () => go('/app/product-profitability') },
         { label: 'Tax Overview', icon: ReceiptPercentIcon, onClick: () => go('/app/tax-overview') },
         { label: 'Fixed Assets', icon: CubeIcon, onClick: () => go('/app/assets') },
       ],

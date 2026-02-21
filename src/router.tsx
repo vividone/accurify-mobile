@@ -47,6 +47,7 @@ import { PaymentSettingsPage } from '@/pages/settings/PaymentSettingsPage';
 import { BillingPage } from '@/pages/settings/BillingPage';
 import { ClientCreatePage } from '@/pages/clients/ClientCreatePage';
 import { OnboardingPage } from '@/pages/onboarding/OnboardingPage';
+import { ProductProfitabilityPage } from '@/pages/reports/ProductProfitabilityPage';
 import { TermsOfServicePage } from '@/pages/legal/TermsOfServicePage';
 import { PrivacyPolicyPage } from '@/pages/legal/PrivacyPolicyPage';
 
@@ -112,6 +113,7 @@ export const router = createBrowserRouter([
       { path: 'income-statement', element: <IncomeStatementPage /> },
       { path: 'ar-aging', element: <PremiumRoute promptType="glFeatureLocked"><ARAgingPage /></PremiumRoute> },
       { path: 'ap-aging', element: <PremiumRoute promptType="glFeatureLocked"><APAgingPage /></PremiumRoute> },
+      { path: 'product-profitability', element: <PremiumRoute promptType="glFeatureLocked"><ProductProfitabilityPage /></PremiumRoute> },
       { path: 'tax-overview', element: <TaxOverviewPage /> },
       { path: 'payment-settings', element: <PaymentSettingsPage /> },
       { path: 'billing', element: <BillingPage /> },

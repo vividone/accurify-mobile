@@ -212,6 +212,92 @@ export interface AgingReport {
   partyTotals: AgingPartyTotal[];
 }
 
+// Product Profitability Types
+export interface ProductProfitabilityLine {
+  productId: string;
+  productName: string;
+  sku: string | null;
+  quantitySold: number;
+  revenue: number;
+  costOfGoodsSold: number;
+  grossProfit: number;
+  grossMarginPercent: number;
+  averageSellPrice: number;
+  averageCostPrice: number;
+}
+
+export interface ProductProfitabilityReport {
+  startDate: string;
+  endDate: string;
+  totalProducts: number;
+  totalRevenue: number;
+  totalCogs: number;
+  totalGrossProfit: number;
+  averageGrossMargin: number;
+  products: ProductProfitabilityLine[];
+}
+
+// Cash Flow Forecast Types
+export interface ForecastPeriod {
+  label: string;
+  days: number;
+  expectedInflows: number;
+  expectedOutflows: number;
+  netCashFlow: number;
+  projectedBalance: number;
+}
+
+export interface UpcomingPayable {
+  billId: string;
+  supplierName: string;
+  amount: number;
+  dueDate: string;
+  daysUntilDue: number;
+}
+
+export interface UpcomingReceivable {
+  invoiceId: string;
+  invoiceNumber: string;
+  clientName: string;
+  amount: number;
+  dueDate: string;
+  daysUntilDue: number;
+}
+
+export interface CashFlowForecast {
+  asOfDate: string;
+  currentCashBalance: number;
+  periods: ForecastPeriod[];
+  totalExpectedInflows: number;
+  totalExpectedOutflows: number;
+  upcomingPayables: UpcomingPayable[];
+  upcomingReceivables: UpcomingReceivable[];
+}
+
+// Margin Trend Types
+export interface MonthlyMargin {
+  month: string;
+  revenue: number;
+  cogs: number;
+  grossProfit: number;
+  marginPercent: number;
+}
+
+export interface MarginAlert {
+  severity: 'INFO' | 'WARNING' | 'CRITICAL';
+  message: string;
+  period: string;
+}
+
+export interface MarginTrendReport {
+  currentMonthMargin: number;
+  previousMonthMargin: number;
+  changePercent: number;
+  trend: 'UP' | 'DOWN' | 'STABLE';
+  monthlyData: MonthlyMargin[];
+  alerts: MarginAlert[];
+}
+
 export interface PageResponse<T> {
   content: T[];
   totalElements: number;
@@ -243,6 +329,12 @@ export const glKeys = {
   taxSummary: (businessId?: string) => [...glKeys.forBusiness(businessId), 'tax-summary'] as const,
   accountLedger: (accountId: string, page?: number, size?: number, from?: string, to?: string, businessId?: string) =>
     [...glKeys.forBusiness(businessId), 'account-ledger', accountId, { page, size, from, to }] as const,
+  productProfitability: (from?: string, to?: string, businessId?: string) =>
+    [...glKeys.forBusiness(businessId), 'product-profitability', { from, to }] as const,
+  cashFlowForecast: (businessId?: string) =>
+    [...glKeys.forBusiness(businessId), 'cash-flow-forecast'] as const,
+  marginTrend: (months?: number, businessId?: string) =>
+    [...glKeys.forBusiness(businessId), 'margin-trend', months] as const,
 };
 
 // ==================== API Functions ====================
@@ -395,6 +487,32 @@ const glApi = {
       `/gl/accounts/${accountId}/ledger?${params}`,
       { headers: buildHeaders(businessId) }
     );
+    return response.data;
+  },
+
+  getProductProfitability: async (from?: string, to?: string, businessId?: string): Promise<ProductProfitabilityReport> => {
+    const params = new URLSearchParams();
+    if (from) params.append('from', from);
+    if (to) params.append('to', to);
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+    const response = await apiClient.get<ProductProfitabilityReport>(`/gl/product-profitability${queryString}`, {
+      headers: buildHeaders(businessId),
+    });
+    return response.data;
+  },
+
+  getCashFlowForecast: async (businessId?: string): Promise<CashFlowForecast> => {
+    const response = await apiClient.get<CashFlowForecast>('/gl/cash-flow-forecast', {
+      headers: buildHeaders(businessId),
+    });
+    return response.data;
+  },
+
+  getMarginTrend: async (months?: number, businessId?: string): Promise<MarginTrendReport> => {
+    const params = months ? `?months=${months}` : '';
+    const response = await apiClient.get<MarginTrendReport>(`/gl/margin-trend${params}`, {
+      headers: buildHeaders(businessId),
+    });
     return response.data;
   },
 
@@ -668,6 +786,51 @@ export const useAccountLedger = (
     queryKey: glKeys.accountLedger(accountId, page, size, from, to, businessId),
     queryFn: () => glApi.getAccountLedger(accountId, page, size, from, to, businessId),
     enabled: hasPremiumAccess && !!accountId,
+  });
+};
+
+/**
+ * Hook to get product profitability report
+ * @param from - Start date (YYYY-MM-DD format)
+ * @param to - End date (YYYY-MM-DD format)
+ * @param businessId - Optional businessId for accountant access to client data
+ */
+export const useProductProfitability = (from?: string, to?: string, businessId?: string) => {
+  const hasPremiumAccess = usePremiumAccess();
+
+  return useQuery({
+    queryKey: glKeys.productProfitability(from, to, businessId),
+    queryFn: () => glApi.getProductProfitability(from, to, businessId),
+    enabled: hasPremiumAccess,
+  });
+};
+
+/**
+ * Hook to get cash flow forecast
+ * @param businessId - Optional businessId for accountant access to client data
+ */
+export const useCashFlowForecast = (businessId?: string) => {
+  const hasPremiumAccess = usePremiumAccess();
+
+  return useQuery({
+    queryKey: glKeys.cashFlowForecast(businessId),
+    queryFn: () => glApi.getCashFlowForecast(businessId),
+    enabled: hasPremiumAccess,
+  });
+};
+
+/**
+ * Hook to get margin trend report
+ * @param months - Number of months to include (default 6)
+ * @param businessId - Optional businessId for accountant access to client data
+ */
+export const useMarginTrend = (months?: number, businessId?: string) => {
+  const hasPremiumAccess = usePremiumAccess();
+
+  return useQuery({
+    queryKey: glKeys.marginTrend(months, businessId),
+    queryFn: () => glApi.getMarginTrend(months, businessId),
+    enabled: hasPremiumAccess,
   });
 };
 
