@@ -35,25 +35,22 @@ function CashFlowForecastSection({ forecast }: { forecast: CashFlowForecast }) {
           {formatCurrency(forecast.currentCashBalance)}
         </p>
       </Card>
-      <div className="space-y-2">
+      <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-1 px-1">
         {forecast.periods.map((period) => {
           const isPositive = period.netCashFlow >= 0;
           return (
-            <Card key={period.label}>
-              <div className="flex items-center justify-between mb-1">
-                <p className="text-label-01 font-medium text-gray-70">{period.label}</p>
-                <span className={`text-helper-01 font-medium ${isPositive ? 'text-green-700' : 'text-red-700'}`}>
-                  {isPositive ? '+' : ''}{formatCurrency(period.netCashFlow)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <p className="text-helper-01 text-gray-40">Projected balance</p>
-                <p className="text-body-01 font-semibold tabular-nums text-gray-100">
-                  {formatCurrency(period.projectedBalance)}
-                </p>
-              </div>
-              <div className="flex items-center gap-3 mt-1 text-helper-01 text-gray-40">
+            <Card key={period.label} className="min-w-[160px] flex-shrink-0 snap-start">
+              <p className="text-label-01 font-medium text-gray-70 mb-1">{period.label}</p>
+              <p className="text-body-01 font-semibold tabular-nums text-gray-100">
+                {formatCurrency(period.projectedBalance)}
+              </p>
+              <p className={`text-helper-01 font-medium mt-1 ${isPositive ? 'text-green-700' : 'text-red-700'}`}>
+                {isPositive ? '+' : ''}{formatCurrency(period.netCashFlow)} net
+              </p>
+              <div className="flex gap-2 mt-1 text-helper-01 text-gray-40">
                 <span>In: {formatCurrency(period.expectedInflows)}</span>
+              </div>
+              <div className="text-helper-01 text-gray-40">
                 <span>Out: {formatCurrency(period.expectedOutflows)}</span>
               </div>
             </Card>
@@ -259,6 +256,16 @@ export function DashboardPage() {
         </div>
       </div>
 
+      {/* Cash Flow Forecast - premium only */}
+      {!isCashFlowLoading && cashFlowForecast && (
+        <CashFlowForecastSection forecast={cashFlowForecast} />
+      )}
+
+      {/* Margin Trend - premium only */}
+      {!isMarginLoading && marginTrend && (
+        <MarginTrendSection trend={marginTrend} />
+      )}
+
       {/* Recent Activity */}
       {dashboard.recentActivity.length > 0 && (
         <div>
@@ -290,16 +297,6 @@ export function DashboardPage() {
             </div>
           </Card>
         </div>
-      )}
-
-      {/* Cash Flow Forecast - premium only */}
-      {!isCashFlowLoading && cashFlowForecast && (
-        <CashFlowForecastSection forecast={cashFlowForecast} />
-      )}
-
-      {/* Margin Trend - premium only */}
-      {!isMarginLoading && marginTrend && (
-        <MarginTrendSection trend={marginTrend} />
       )}
     </div>
   );
