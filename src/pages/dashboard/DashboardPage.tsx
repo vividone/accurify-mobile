@@ -17,6 +17,9 @@ import {
   ExclamationTriangleIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
+  ArrowDownIcon,
+  ArrowUpIcon,
+  CurrencyDollarIcon,
   DocumentTextIcon,
   ClipboardDocumentListIcon,
   UserGroupIcon,
@@ -28,30 +31,48 @@ import {
 function CashFlowForecastSection({ forecast }: { forecast: CashFlowForecast }) {
   return (
     <div>
-      <h2 className="text-heading-01 text-gray-100 mb-3">Cash Flow Forecast</h2>
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center">
+          <CurrencyDollarIcon className="w-4 h-4 text-blue-600" />
+        </div>
+        <h2 className="text-heading-01 text-gray-100">Cash Flow Forecast</h2>
+      </div>
+
+      {/* Hero: Current Cash Balance */}
       <Card className="mb-3">
-        <p className="text-label-01 text-gray-50">Current Cash Balance</p>
-        <p className="text-heading-03 font-semibold tabular-nums text-gray-100">
+        <p className="text-label-01 text-gray-50 uppercase tracking-wide">Current Cash Balance</p>
+        <p className="text-[1.75rem] font-bold tabular-nums text-gray-100 leading-tight mt-1">
           {formatCurrency(forecast.currentCashBalance)}
         </p>
       </Card>
+
+      {/* Period projections — horizontal scroll */}
       <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-1 px-1">
         {forecast.periods.map((period) => {
           const isPositive = period.netCashFlow >= 0;
           return (
-            <Card key={period.label} className="min-w-[160px] flex-shrink-0 snap-start">
-              <p className="text-label-01 font-medium text-gray-70 mb-1">{period.label}</p>
-              <p className="text-body-01 font-semibold tabular-nums text-gray-100">
+            <Card
+              key={period.label}
+              className={`min-w-[170px] flex-shrink-0 snap-start border-l-[3px] ${isPositive ? 'border-l-green-500' : 'border-l-red-500'}`}
+            >
+              <p className="text-[0.65rem] font-semibold text-gray-50 uppercase tracking-wide mb-1">
+                {period.label}
+              </p>
+              <p className="text-lg font-bold tabular-nums text-gray-100 leading-tight">
                 {formatCurrency(period.projectedBalance)}
               </p>
-              <p className={`text-helper-01 font-medium mt-1 ${isPositive ? 'text-green-700' : 'text-red-700'}`}>
-                {isPositive ? '+' : ''}{formatCurrency(period.netCashFlow)} net
+              <p className={`text-sm font-semibold tabular-nums mt-1 ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                {isPositive ? '+' : ''}{formatCurrency(period.netCashFlow)}
               </p>
-              <div className="flex gap-2 mt-1 text-helper-01 text-gray-40">
-                <span>In: {formatCurrency(period.expectedInflows)}</span>
-              </div>
-              <div className="text-helper-01 text-gray-40">
-                <span>Out: {formatCurrency(period.expectedOutflows)}</span>
+              <div className="flex items-center gap-3 mt-2 pt-2 border-t border-gray-100/10">
+                <span className="inline-flex items-center gap-0.5 text-[0.7rem] tabular-nums text-gray-50">
+                  <ArrowDownIcon className="w-3 h-3 text-green-600" />
+                  {formatCurrency(period.expectedInflows)}
+                </span>
+                <span className="inline-flex items-center gap-0.5 text-[0.7rem] tabular-nums text-gray-50">
+                  <ArrowUpIcon className="w-3 h-3 text-red-600" />
+                  {formatCurrency(period.expectedOutflows)}
+                </span>
               </div>
             </Card>
           );
@@ -63,42 +84,57 @@ function CashFlowForecastSection({ forecast }: { forecast: CashFlowForecast }) {
 
 function MarginTrendSection({ trend }: { trend: MarginTrendReport }) {
   const trendIcon = trend.trend === 'UP'
-    ? <ArrowTrendingUpIcon className="w-5 h-5 text-success" />
+    ? <ArrowTrendingUpIcon className="w-4 h-4 text-green-600" />
     : trend.trend === 'DOWN'
-      ? <ArrowTrendingDownIcon className="w-5 h-5 text-danger" />
-      : <ChartBarIcon className="w-5 h-5 text-gray-50" />;
+      ? <ArrowTrendingDownIcon className="w-4 h-4 text-red-600" />
+      : <ChartBarIcon className="w-4 h-4 text-gray-50" />;
 
-  const trendColor = trend.trend === 'UP' ? 'text-success' : trend.trend === 'DOWN' ? 'text-danger' : 'text-gray-70';
+  const trendColor = trend.trend === 'UP' ? 'text-green-600' : trend.trend === 'DOWN' ? 'text-red-600' : 'text-gray-70';
 
   const latestAlert = trend.alerts.length > 0 ? trend.alerts[trend.alerts.length - 1] : null;
 
   return (
     <div>
-      <h2 className="text-heading-01 text-gray-100 mb-3">Gross Margin Trend</h2>
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-7 h-7 bg-purple-50 rounded-lg flex items-center justify-center">
+          <ChartBarIcon className="w-4 h-4 text-purple-600" />
+        </div>
+        <h2 className="text-heading-01 text-gray-100">Gross Margin Trend</h2>
+      </div>
       <Card>
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
+        {/* Hero: Current margin */}
+        <div className="mb-3">
+          <p className={`text-[2rem] font-bold tabular-nums leading-tight ${trendColor}`}>
+            {trend.currentMonthMargin.toFixed(1)}%
+          </p>
+          <div className="flex items-center gap-1.5 mt-1">
             {trendIcon}
-            <p className="text-heading-03 font-semibold tabular-nums text-gray-100">
-              {trend.currentMonthMargin.toFixed(1)}%
-            </p>
-          </div>
-          <div className="text-right">
-            <p className={`text-body-01 font-medium tabular-nums ${trendColor}`}>
+            <span className={`text-sm font-medium tabular-nums ${trendColor}`}>
               {trend.changePercent >= 0 ? '+' : ''}{trend.changePercent.toFixed(1)}%
-            </p>
-            <p className="text-helper-01 text-gray-40">vs last month</p>
+            </span>
+            <span className="text-helper-01 text-gray-40">vs last month</span>
           </div>
         </div>
-        <p className="text-helper-01 text-gray-40">
-          Previous month: {trend.previousMonthMargin.toFixed(1)}%
-        </p>
+
+        {/* Previous month context */}
+        <div className="flex items-center justify-between py-2 border-t border-gray-100/10">
+          <span className="text-helper-01 text-gray-40">Previous month</span>
+          <span className="text-body-01 font-medium tabular-nums text-gray-70">
+            {trend.previousMonthMargin.toFixed(1)}%
+          </span>
+        </div>
       </Card>
+
+      {/* Alert */}
       {latestAlert && (
-        <div className={`mt-2 rounded-lg px-3 py-2 ${
+        <div className={`mt-2 rounded-lg px-3 py-2.5 flex items-start gap-2 ${
           latestAlert.severity === 'CRITICAL' ? 'bg-red-50' :
           latestAlert.severity === 'WARNING' ? 'bg-yellow-50' : 'bg-blue-50'
         }`}>
+          <ExclamationTriangleIcon className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
+            latestAlert.severity === 'CRITICAL' ? 'text-red-600' :
+            latestAlert.severity === 'WARNING' ? 'text-yellow-600' : 'text-blue-600'
+          }`} />
           <p className={`text-helper-01 font-medium ${
             latestAlert.severity === 'CRITICAL' ? 'text-red-700' :
             latestAlert.severity === 'WARNING' ? 'text-yellow-700' : 'text-blue-700'
