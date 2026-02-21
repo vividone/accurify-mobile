@@ -40,6 +40,8 @@ import { HelpArticlePage } from '@/pages/help/HelpArticlePage';
 import { TransactionsPage } from '@/pages/transactions/TransactionsPage';
 import { TransactionCreatePage } from '@/pages/transactions/TransactionCreatePage';
 import { IncomeStatementPage } from '@/pages/reports/IncomeStatementPage';
+import { ARAgingPage } from '@/pages/reports/ARAgingPage';
+import { APAgingPage } from '@/pages/reports/APAgingPage';
 import { TaxOverviewPage } from '@/pages/tax/TaxOverviewPage';
 import { PaymentSettingsPage } from '@/pages/settings/PaymentSettingsPage';
 import { BillingPage } from '@/pages/settings/BillingPage';
@@ -108,6 +110,8 @@ export const router = createBrowserRouter([
       { path: 'transactions', element: <TransactionsPage /> },
       { path: 'transactions/new', element: <TransactionCreatePage /> },
       { path: 'income-statement', element: <IncomeStatementPage /> },
+      { path: 'ar-aging', element: <PremiumRoute promptType="glFeatureLocked"><ARAgingPage /></PremiumRoute> },
+      { path: 'ap-aging', element: <PremiumRoute promptType="glFeatureLocked"><APAgingPage /></PremiumRoute> },
       { path: 'tax-overview', element: <TaxOverviewPage /> },
       { path: 'payment-settings', element: <PaymentSettingsPage /> },
       { path: 'billing', element: <BillingPage /> },

@@ -9,7 +9,7 @@ import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useQueryClient } from '@tanstack/react-query';
 import { format, startOfYear, endOfYear } from 'date-fns';
 import { ExclamationTriangleIcon, DocumentChartBarIcon } from '@heroicons/react/24/outline';
-import type { IncomeStatementSection } from '@/queries/gl.queries';
+import type { IncomeStatementSection, AccountingBasis } from '@/queries/gl.queries';
 
 function formatDateRange(date: Date): string {
   return format(date, 'yyyy-MM-dd');
@@ -50,8 +50,9 @@ export function IncomeStatementPage() {
   const now = new Date();
   const [startDate, setStartDate] = useState(formatDateRange(startOfYear(now)));
   const [endDate, setEndDate] = useState(formatDateRange(endOfYear(now)));
+  const [basis, setBasis] = useState<AccountingBasis>('ACCRUAL');
 
-  const { data: report, isLoading, isError, error } = useIncomeStatement(startDate, endDate);
+  const { data: report, isLoading, isError, error } = useIncomeStatement(startDate, endDate, basis);
 
   const handleRefresh = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ['gl'] });
@@ -94,6 +95,33 @@ export function IncomeStatementPage() {
                 className="w-full h-10 px-3 bg-gray-10 border border-gray-30 rounded-lg text-body-01 text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
+          </div>
+        </Card>
+
+        {/* Accounting Basis Toggle */}
+        <Card>
+          <p className="text-label-01 text-gray-70 mb-2">Accounting Basis</p>
+          <div className="flex rounded-lg bg-gray-10 p-1">
+            <button
+              onClick={() => setBasis('ACCRUAL')}
+              className={`flex-1 py-2 text-body-01 font-medium rounded-md transition-colors ${
+                basis === 'ACCRUAL'
+                  ? 'bg-white text-primary shadow-sm'
+                  : 'text-gray-50'
+              }`}
+            >
+              Accrual
+            </button>
+            <button
+              onClick={() => setBasis('CASH')}
+              className={`flex-1 py-2 text-body-01 font-medium rounded-md transition-colors ${
+                basis === 'CASH'
+                  ? 'bg-white text-primary shadow-sm'
+                  : 'text-gray-50'
+              }`}
+            >
+              Cash
+            </button>
           </div>
         </Card>
 
