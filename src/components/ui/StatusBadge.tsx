@@ -21,6 +21,14 @@ const statusConfig: Record<string, { label: string; variant: 'success' | 'warnin
   ACTIVE: { label: 'Active', variant: 'success' },
   FULLY_DEPRECIATED: { label: 'Fully Depreciated', variant: 'gray' },
   DISPOSED: { label: 'Disposed', variant: 'danger' },
+
+  // Project statuses
+  PAUSED: { label: 'Paused', variant: 'warning' },
+  COMPLETED: { label: 'Completed', variant: 'success' },
+  ARCHIVED: { label: 'Archived', variant: 'gray' },
+
+  // Time entry statuses
+  INVOICED: { label: 'Invoiced', variant: 'purple' },
 };
 
 interface StatusBadgeProps {

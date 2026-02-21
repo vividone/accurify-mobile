@@ -20,3 +20,5 @@ export { invoicePaymentApi } from './invoice-payment.api';
 export { publicPaymentApi } from './public-payment.api';
 export { taxApi } from './tax.api';
 export { assetsApi } from './assets.api';
+export { projectsApi } from './projects.api';
+export { timeEntriesApi } from './time-entries.api';
