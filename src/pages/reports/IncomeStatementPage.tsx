@@ -8,7 +8,7 @@ import { formatCurrency } from '@/utils/currency';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useQueryClient } from '@tanstack/react-query';
 import { format, startOfYear, endOfYear } from 'date-fns';
-import { ExclamationTriangleIcon, DocumentChartBarIcon } from '@heroicons/react/24/outline';
+import { ExclamationTriangleIcon, DocumentChartBarIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 import type { IncomeStatementSection, AccountingBasis } from '@/queries/gl.queries';
 
 function formatDateRange(date: Date): string {
@@ -124,6 +124,15 @@ export function IncomeStatementPage() {
             </button>
           </div>
         </Card>
+
+        {basis === 'CASH' && (
+          <div className="bg-blue-50 rounded-lg px-3 py-2.5 flex items-start gap-2">
+            <InformationCircleIcon className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+            <p className="text-helper-01 text-blue-700">
+              Cash basis — for management purposes only. Does not comply with IFRS.
+            </p>
+          </div>
+        )}
 
         {isLoading && <DashboardSkeleton />}
 
