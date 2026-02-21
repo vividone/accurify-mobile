@@ -20,6 +20,7 @@ import {
   ClockIcon,
   XMarkIcon,
   ChartBarSquareIcon,
+  FolderIcon,
 } from '@heroicons/react/24/outline';
 import { useUIStore } from '@/store/ui.store';
 import { useAuthStore } from '@/store/auth.store';
@@ -59,6 +60,8 @@ export function MoreMenu() {
       items: [
         { label: 'Clients', icon: UserGroupIcon, onClick: () => go('/app/clients') },
         { label: 'Transactions', icon: BanknotesIcon, onClick: () => go('/app/transactions') },
+        { label: 'Projects', icon: FolderIcon, onClick: () => go('/app/projects') },
+        { label: 'Time Tracking', icon: ClockIcon, onClick: () => go('/app/time-entries') },
       ],
     });
 

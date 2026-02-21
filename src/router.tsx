@@ -50,6 +50,9 @@ import { OnboardingPage } from '@/pages/onboarding/OnboardingPage';
 import { ProductProfitabilityPage } from '@/pages/reports/ProductProfitabilityPage';
 import { TermsOfServicePage } from '@/pages/legal/TermsOfServicePage';
 import { PrivacyPolicyPage } from '@/pages/legal/PrivacyPolicyPage';
+import { ProjectsPage } from '@/pages/projects/ProjectsPage';
+import { ProjectDetailPage } from '@/pages/projects/ProjectDetailPage';
+import { TimeEntriesPage } from '@/pages/time-entries/TimeEntriesPage';
 
 export const router = createBrowserRouter([
   // Public auth routes
@@ -105,6 +108,9 @@ export const router = createBrowserRouter([
       { path: 'orders/:id', element: <GoodsRoute><OrderDetailPage /></GoodsRoute> },
       { path: 'stock', element: <GoodsRoute><StockPage /></GoodsRoute> },
       { path: 'store', element: <GoodsRoute><StoreDashboardPage /></GoodsRoute> },
+      { path: 'projects', element: <ProjectsPage /> },
+      { path: 'projects/:id', element: <ProjectDetailPage /> },
+      { path: 'time-entries', element: <TimeEntriesPage /> },
       { path: 'assets', element: <PremiumRoute promptType="glFeatureLocked"><AssetListPage /></PremiumRoute> },
       { path: 'notifications', element: <NotificationsPage /> },
       { path: 'settings', element: <SettingsPage /> },

@@ -23,3 +23,4 @@ export * from './payment.types';
 export * from './bill.types';
 export * from './tax.types';
 export * from './asset.types';
+export * from './project.types';
