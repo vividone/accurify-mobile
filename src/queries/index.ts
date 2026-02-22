@@ -21,3 +21,6 @@ export * from './store.queries';
 export * from './assets.queries';
 export * from './projects.queries';
 export * from './time-entries.queries';
+export * from './team-members.queries';
+export * from './project-expenses.queries';
+export * from './profitability.queries';

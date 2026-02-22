@@ -68,3 +68,84 @@ export interface TimeEntryRequest {
   hourlyRate?: number;
   notes?: string;
 }
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  userId?: string;
+  userName?: string;
+  roleTitle?: string;
+  employmentType: string;
+  annualCost?: number;
+  availableHoursPerWeek: number;
+  defaultBillingRate?: number;
+  costRate?: number;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TeamMemberRequest {
+  name: string;
+  userId?: string;
+  roleTitle?: string;
+  employmentType?: string;
+  annualCost?: number;
+  availableHoursPerWeek?: number;
+  defaultBillingRate?: number;
+}
+
+export interface ProjectExpense {
+  id: string;
+  projectId: string;
+  projectName: string;
+  description: string;
+  amount: number;
+  category?: string;
+  billable: boolean;
+  billId?: string;
+  receiptUrl?: string;
+  expenseDate: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProjectExpenseRequest {
+  description: string;
+  amount: number;
+  category?: string;
+  billable?: boolean;
+  billId?: string;
+  receiptUrl?: string;
+  expenseDate: string;
+}
+
+export interface ProjectProfitability {
+  projectId: string;
+  projectName: string;
+  clientId?: string;
+  clientName?: string;
+  status: string;
+  revenue: number;
+  laborCost: number;
+  expenseCost: number;
+  totalCos: number;
+  grossMargin: number;
+  grossMarginPercent: number;
+  totalHours: number;
+  billableHours: number;
+  budget?: number;
+  budgetUsedPercent?: number;
+}
+
+export interface ClientProfitability {
+  clientId?: string;
+  clientName: string;
+  projectCount: number;
+  revenue: number;
+  totalCos: number;
+  grossMargin: number;
+  grossMarginPercent: number;
+  totalHours: number;
+  billableHours: number;
+}

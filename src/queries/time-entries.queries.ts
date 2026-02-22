@@ -89,3 +89,16 @@ export function useDeleteTimeEntry() {
     },
   });
 }
+
+export function useApproveTimeEntry() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => timeEntriesApi.approve(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: timeEntryKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: timeEntryKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
+    },
+  });
+}

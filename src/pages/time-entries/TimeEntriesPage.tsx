@@ -5,9 +5,10 @@ import {
   ClockIcon,
   PlusIcon,
   XMarkIcon,
+  CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
-import { useTimeEntries, useCreateTimeEntry, useProjects, timeEntryKeys } from '@/queries';
+import { useTimeEntries, useCreateTimeEntry, useApproveTimeEntry, useProjects, timeEntryKeys } from '@/queries';
 import type { TimeEntryRequest, TimeEntry } from '@/types';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -23,6 +24,7 @@ export function TimeEntriesPage() {
   const { data: entriesData, isLoading } = useTimeEntries(0, 100);
   const entries = entriesData?.content ?? [];
   const [showLogTimeSheet, setShowLogTimeSheet] = useState(false);
+  const approveTimeEntry = useApproveTimeEntry();
 
   const handleRefresh = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: timeEntryKeys.lists() });
@@ -119,11 +121,28 @@ export function TimeEntriesPage() {
                             </span>
                           </div>
                         </div>
-                        {entry.amount != null && (
-                          <p className="text-helper-01 text-gray-50 mt-1">
-                            {formatCurrency(entry.amount)}
-                          </p>
-                        )}
+                        <div className="flex items-center justify-between mt-1">
+                          <div className="flex items-center gap-2">
+                            {entry.amount != null && (
+                              <p className="text-helper-01 text-gray-50">
+                                {formatCurrency(entry.amount)}
+                              </p>
+                            )}
+                            <Badge variant={entry.status === 'APPROVED' ? 'success' : entry.status === 'INVOICED' ? 'info' : 'gray'}>
+                              {entry.status}
+                            </Badge>
+                          </div>
+                          {entry.status === 'DRAFT' && (
+                            <button
+                              onClick={() => approveTimeEntry.mutate(entry.id)}
+                              disabled={approveTimeEntry.isPending}
+                              className="flex items-center gap-1 px-2 py-1 text-label-01 font-medium text-primary active:bg-gray-10 rounded-lg"
+                            >
+                              <CheckCircleIcon className="w-4 h-4" />
+                              Approve
+                            </button>
+                          )}
+                        </div>
                       </Card>
                     ))}
                   </div>
