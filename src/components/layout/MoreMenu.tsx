@@ -45,6 +45,7 @@ export function MoreMenu() {
   const logoutAsync = useAuthStore((s) => s.logoutAsync);
   const business = useBusinessStore((s) => s.business);
   const isGoodsBusiness = business?.type === BusinessType.GOODS;
+  const isServiceBusiness = business?.type === BusinessType.SERVICE;
 
   const go = (path: string) => {
     setOpen(false);
@@ -55,15 +56,18 @@ export function MoreMenu() {
     const result: MenuSection[] = [];
 
     // Records — available for all business types
-    result.push({
-      title: 'Records',
-      items: [
-        { label: 'Clients', icon: UserGroupIcon, onClick: () => go('/app/clients') },
-        { label: 'Transactions', icon: BanknotesIcon, onClick: () => go('/app/transactions') },
+    const recordItems: MenuItem[] = [
+      { label: 'Clients', icon: UserGroupIcon, onClick: () => go('/app/clients') },
+      { label: 'Transactions', icon: BanknotesIcon, onClick: () => go('/app/transactions') },
+    ];
+    // Projects & Time Tracking — SERVICE businesses only
+    if (isServiceBusiness) {
+      recordItems.push(
         { label: 'Projects', icon: FolderIcon, onClick: () => go('/app/projects') },
         { label: 'Time Tracking', icon: ClockIcon, onClick: () => go('/app/time-entries') },
-      ],
-    });
+      );
+    }
+    result.push({ title: 'Records', items: recordItems });
 
     // Reports — available for all business types
     result.push({
@@ -113,7 +117,7 @@ export function MoreMenu() {
     });
 
     return result;
-  }, [isGoodsBusiness, navigate, setOpen]);
+  }, [isGoodsBusiness, isServiceBusiness, navigate, setOpen]);
 
   const handleLogout = async () => {
     setOpen(false);

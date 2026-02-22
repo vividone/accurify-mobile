@@ -69,4 +69,12 @@ export const timeEntriesApi = {
   delete: async (id: string): Promise<void> => {
     await apiClient.delete(`${TIME_ENTRIES_BASE}/${id}`);
   },
+
+  // Approve time entry
+  approve: async (id: string): Promise<TimeEntry> => {
+    const response = await apiClient.patch<ApiResponse<TimeEntry>>(
+      `${TIME_ENTRIES_BASE}/${id}/approve`
+    );
+    return response.data.data!;
+  },
 };

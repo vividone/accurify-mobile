@@ -22,3 +22,6 @@ export { taxApi } from './tax.api';
 export { assetsApi } from './assets.api';
 export { projectsApi } from './projects.api';
 export { timeEntriesApi } from './time-entries.api';
+export { teamMembersApi } from './team-members.api';
+export { projectExpensesApi } from './project-expenses.api';
+export { profitabilityApi } from './profitability.api';

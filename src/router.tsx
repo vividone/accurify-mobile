@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { OnboardingGuard } from '@/components/auth/OnboardingGuard';
 import { GoodsRoute } from '@/components/auth/GoodsRoute';
+import { ServiceRoute } from '@/components/auth/ServiceRoute';
 import { PremiumRoute } from '@/components/auth/PremiumRoute';
 import { MobileShell } from '@/components/layout/MobileShell';
 
@@ -53,6 +54,8 @@ import { PrivacyPolicyPage } from '@/pages/legal/PrivacyPolicyPage';
 import { ProjectsPage } from '@/pages/projects/ProjectsPage';
 import { ProjectDetailPage } from '@/pages/projects/ProjectDetailPage';
 import { TimeEntriesPage } from '@/pages/time-entries/TimeEntriesPage';
+import { TeamMembersPage } from '@/pages/team-members/TeamMembersPage';
+import { ProfitabilityPage } from '@/pages/profitability/ProfitabilityPage';
 
 export const router = createBrowserRouter([
   // Public auth routes
@@ -108,9 +111,11 @@ export const router = createBrowserRouter([
       { path: 'orders/:id', element: <GoodsRoute><OrderDetailPage /></GoodsRoute> },
       { path: 'stock', element: <GoodsRoute><StockPage /></GoodsRoute> },
       { path: 'store', element: <GoodsRoute><StoreDashboardPage /></GoodsRoute> },
-      { path: 'projects', element: <ProjectsPage /> },
-      { path: 'projects/:id', element: <ProjectDetailPage /> },
-      { path: 'time-entries', element: <TimeEntriesPage /> },
+      { path: 'projects', element: <ServiceRoute><ProjectsPage /></ServiceRoute> },
+      { path: 'projects/:id', element: <ServiceRoute><ProjectDetailPage /></ServiceRoute> },
+      { path: 'time-entries', element: <ServiceRoute><TimeEntriesPage /></ServiceRoute> },
+      { path: 'team-members', element: <ServiceRoute><TeamMembersPage /></ServiceRoute> },
+      { path: 'profitability', element: <ServiceRoute><ProfitabilityPage /></ServiceRoute> },
       { path: 'assets', element: <PremiumRoute promptType="glFeatureLocked"><AssetListPage /></PremiumRoute> },
       { path: 'notifications', element: <NotificationsPage /> },
       { path: 'settings', element: <SettingsPage /> },
