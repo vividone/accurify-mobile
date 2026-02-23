@@ -24,3 +24,6 @@ export * from './time-entries.queries';
 export * from './team-members.queries';
 export * from './project-expenses.queries';
 export * from './profitability.queries';
+export * from './wip.queries';
+export * from './project-retainers.queries';
+export * from './milestones.queries';
