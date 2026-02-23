@@ -25,3 +25,6 @@ export { timeEntriesApi } from './time-entries.api';
 export { teamMembersApi } from './team-members.api';
 export { projectExpensesApi } from './project-expenses.api';
 export { profitabilityApi } from './profitability.api';
+export { wipApi } from './wip.api';
+export { projectRetainersApi } from './project-retainers.api';
+export { milestonesApi } from './milestones.api';

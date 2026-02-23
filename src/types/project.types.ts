@@ -26,6 +26,12 @@ export interface Project {
   totalHours: number;
   billableHours: number;
   billableAmount?: number;
+  billingModel?: string;
+  contractValue?: number;
+  estimatedCost?: number;
+  wipBalance?: number;
+  totalBilled?: number;
+  totalRecognizedRevenue?: number;
   createdAt: string;
   updatedAt: string;
 }

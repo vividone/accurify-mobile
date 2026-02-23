@@ -24,3 +24,5 @@ export * from './bill.types';
 export * from './tax.types';
 export * from './asset.types';
 export * from './project.types';
+export * from './wip.types';
+export * from './project-retainer.types';
