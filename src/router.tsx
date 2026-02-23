@@ -59,6 +59,10 @@ import { ProfitabilityPage } from '@/pages/profitability/ProfitabilityPage';
 import { WipReportPage } from '@/pages/wip/WipReportPage';
 import { RetainersPage } from '@/pages/retainers/RetainersPage';
 import { MilestonesPage } from '@/pages/milestones/MilestonesPage';
+import { ProjectHealthPage } from '@/pages/intelligence/ProjectHealthPage';
+import { UtilizationPage } from '@/pages/intelligence/UtilizationPage';
+import { RetainerHealthPage } from '@/pages/intelligence/RetainerHealthPage';
+import { RateAnalysisPage } from '@/pages/intelligence/RateAnalysisPage';
 
 export const router = createBrowserRouter([
   // Public auth routes
@@ -122,6 +126,10 @@ export const router = createBrowserRouter([
       { path: 'wip', element: <ServiceRoute><WipReportPage /></ServiceRoute> },
       { path: 'retainers', element: <ServiceRoute><RetainersPage /></ServiceRoute> },
       { path: 'milestones', element: <ServiceRoute><MilestonesPage /></ServiceRoute> },
+      { path: 'project-health', element: <PremiumRoute><ServiceRoute><ProjectHealthPage /></ServiceRoute></PremiumRoute> },
+      { path: 'utilization', element: <PremiumRoute><ServiceRoute><UtilizationPage /></ServiceRoute></PremiumRoute> },
+      { path: 'retainer-health', element: <PremiumRoute><ServiceRoute><RetainerHealthPage /></ServiceRoute></PremiumRoute> },
+      { path: 'rate-analysis', element: <PremiumRoute><ServiceRoute><RateAnalysisPage /></ServiceRoute></PremiumRoute> },
       { path: 'assets', element: <PremiumRoute promptType="glFeatureLocked"><AssetListPage /></PremiumRoute> },
       { path: 'notifications', element: <NotificationsPage /> },
       { path: 'settings', element: <SettingsPage /> },

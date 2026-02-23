@@ -26,3 +26,4 @@ export * from './asset.types';
 export * from './project.types';
 export * from './wip.types';
 export * from './project-retainer.types';
+export * from './intelligence.types';
