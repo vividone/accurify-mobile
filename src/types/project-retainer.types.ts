@@ -23,7 +23,7 @@ export interface RetainerResponse {
   monthlyHours: number;
   rolloverPolicy: RolloverPolicy;
   maxRolloverHours: number | null;
-  status: string;
+  status: 'ACTIVE' | 'EXPIRED' | 'CANCELLED';
   startDate: string;
   endDate: string | null;
   createdAt: string;
@@ -41,7 +41,7 @@ export interface RetainerPeriodResponse {
   remainingHours: number;
   amountRecognized: number;
   utilizationPercent: number;
-  status: string;
+  status: 'ACTIVE' | 'CLOSED';
   closedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -63,7 +63,7 @@ export interface MilestoneResponse {
   description: string | null;
   amount: number;
   percentage: number | null;
-  status: string;
+  status: 'PENDING' | 'INVOICED' | 'PAID';
   dueDate: string | null;
   completedAt: string | null;
   invoiceId: string | null;

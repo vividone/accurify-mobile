@@ -58,6 +58,7 @@ import { TeamMembersPage } from '@/pages/team-members/TeamMembersPage';
 import { ProfitabilityPage } from '@/pages/profitability/ProfitabilityPage';
 import { WipReportPage } from '@/pages/wip/WipReportPage';
 import { RetainersPage } from '@/pages/retainers/RetainersPage';
+import { MilestonesPage } from '@/pages/milestones/MilestonesPage';
 
 export const router = createBrowserRouter([
   // Public auth routes
@@ -120,6 +121,7 @@ export const router = createBrowserRouter([
       { path: 'profitability', element: <ServiceRoute><ProfitabilityPage /></ServiceRoute> },
       { path: 'wip', element: <ServiceRoute><WipReportPage /></ServiceRoute> },
       { path: 'retainers', element: <ServiceRoute><RetainersPage /></ServiceRoute> },
+      { path: 'milestones', element: <ServiceRoute><MilestonesPage /></ServiceRoute> },
       { path: 'assets', element: <PremiumRoute promptType="glFeatureLocked"><AssetListPage /></PremiumRoute> },
       { path: 'notifications', element: <NotificationsPage /> },
       { path: 'settings', element: <SettingsPage /> },
