@@ -6,7 +6,7 @@ export interface ProjectWipResponse {
   clientId: string | null;
   clientName: string | null;
   billingModel: BillingModel;
-  status: string;
+  status: 'ACTIVE' | 'COMPLETED' | 'ON_HOLD' | 'CANCELLED';
   wipBalance: number;
   totalBilled: number;
   totalRecognizedRevenue: number;

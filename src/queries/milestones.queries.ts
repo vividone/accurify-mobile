@@ -5,7 +5,7 @@ import type { MilestoneRequest } from '@/types';
 export const milestoneKeys = {
   all: ['milestones'] as const,
   byProject: (projectId: string) =>
-    ['projects', projectId, 'milestones'] as const,
+    ['milestones', 'project', projectId] as const,
 };
 
 export function useMilestones(projectId: string) {

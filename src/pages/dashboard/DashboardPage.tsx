@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDashboard } from '@/queries';
+import { useDashboard, useWipSummary } from '@/queries';
 import { useCashFlowForecast, useMarginTrend } from '@/queries/gl.queries';
 import type { CashFlowForecast, MarginTrendReport } from '@/queries/gl.queries';
 import { Card } from '@/components/ui/Card';
@@ -11,6 +11,7 @@ import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useQueryClient } from '@tanstack/react-query';
 import { useBusinessStore } from '@/store/business.store';
 import { BusinessType } from '@/types/enums';
+import { useProjectHealth, useRetainerHealth } from '@/queries/intelligence.queries';
 import {
   BanknotesIcon,
   ClockIcon,
@@ -26,6 +27,11 @@ import {
   CubeIcon,
   ShoppingCartIcon,
   ChartBarIcon,
+  HeartIcon,
+  UsersIcon,
+  DocumentChartBarIcon,
+  ArrowPathRoundedSquareIcon,
+  ChevronRightIcon,
 } from '@heroicons/react/24/outline';
 
 function CashFlowForecastSection({ forecast }: { forecast: CashFlowForecast }) {
@@ -156,10 +162,18 @@ export function DashboardPage() {
   const business = useBusinessStore((s) => s.business);
   const isGoodsBusiness = business?.type === BusinessType.GOODS;
 
+  // Service Intelligence data (only fetched for service businesses)
+  const isServiceBusiness = !isGoodsBusiness;
+  const { data: projectHealth } = useProjectHealth(isServiceBusiness);
+  const { data: retainerHealth } = useRetainerHealth(isServiceBusiness);
+  const { data: wipSummary } = useWipSummary();
+
   const handleRefresh = useCallback(async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
       queryClient.invalidateQueries({ queryKey: ['gl'] }),
+      queryClient.invalidateQueries({ queryKey: ['intelligence'] }),
+      queryClient.invalidateQueries({ queryKey: ['wip'] }),
     ]);
   }, [queryClient]);
 
@@ -300,6 +314,69 @@ export function DashboardPage() {
       {/* Margin Trend - premium only */}
       {!isMarginLoading && marginTrend && (
         <MarginTrendSection trend={marginTrend} />
+      )}
+
+      {/* Service Intelligence - service businesses only */}
+      {!isGoodsBusiness && (
+        <div className="space-y-3">
+          <h2 className="text-heading-02 text-gray-100">Service Intelligence</h2>
+          <div className="grid grid-cols-2 gap-3">
+            <Card onClick={() => navigate('/app/project-health')}>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-7 h-7 bg-green-50 rounded-lg flex items-center justify-center">
+                  <HeartIcon className="w-4 h-4 text-green-600" />
+                </div>
+                <ChevronRightIcon className="w-4 h-4 text-gray-30 ml-auto" />
+              </div>
+              <p className="text-label-01 text-gray-50">Project Health</p>
+              {projectHealth ? (
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-helper-01 text-green-600">{projectHealth.healthyCount}</span>
+                  <span className="text-helper-01 text-gray-30">/</span>
+                  <span className="text-helper-01 text-yellow-600">{projectHealth.warningCount}</span>
+                  <span className="text-helper-01 text-gray-30">/</span>
+                  <span className="text-helper-01 text-red-600">{projectHealth.criticalCount}</span>
+                </div>
+              ) : (
+                <p className="text-helper-01 text-gray-30 mt-1">--</p>
+              )}
+            </Card>
+            <Card onClick={() => navigate('/app/utilization')}>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center">
+                  <UsersIcon className="w-4 h-4 text-blue-600" />
+                </div>
+                <ChevronRightIcon className="w-4 h-4 text-gray-30 ml-auto" />
+              </div>
+              <p className="text-label-01 text-gray-50">Utilization</p>
+              <p className="text-heading-03 tabular-nums text-gray-100 mt-1">--</p>
+            </Card>
+            <Card onClick={() => navigate('/app/wip')}>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-7 h-7 bg-purple-50 rounded-lg flex items-center justify-center">
+                  <DocumentChartBarIcon className="w-4 h-4 text-purple-600" />
+                </div>
+                <ChevronRightIcon className="w-4 h-4 text-gray-30 ml-auto" />
+              </div>
+              <p className="text-label-01 text-gray-50">WIP Balance</p>
+              <p className="text-heading-03 tabular-nums text-gray-100 mt-1">
+                {wipSummary ? formatCurrency(wipSummary.totalWipBalance) : '--'}
+              </p>
+            </Card>
+            <Card onClick={() => navigate('/app/retainer-health')}>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-7 h-7 bg-orange-50 rounded-lg flex items-center justify-center">
+                  <ArrowPathRoundedSquareIcon className="w-4 h-4 text-orange-600" />
+                </div>
+                <ChevronRightIcon className="w-4 h-4 text-gray-30 ml-auto" />
+              </div>
+              <p className="text-label-01 text-gray-50">MRR</p>
+              <p className="text-heading-03 tabular-nums text-gray-100 mt-1">
+                {retainerHealth ? formatCurrency(retainerHealth.totalMRR) : '--'}
+              </p>
+            </Card>
+          </div>
+        </div>
       )}
 
       {/* Recent Activity */}

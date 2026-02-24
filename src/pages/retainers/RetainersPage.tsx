@@ -146,10 +146,12 @@ function RetainerCard({
   onRecordHours: (id: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const pauseRetainer = usePauseRetainer();
   const cancelRetainer = useCancelRetainer();
 
   return (
+    <>
     <Card>
       <div className="space-y-3">
         {/* Header */}
@@ -209,11 +211,7 @@ function RetainerCard({
               Pause
             </button>
             <button
-              onClick={() => {
-                if (confirm('Cancel this retainer agreement?')) {
-                  cancelRetainer.mutate(retainer.id);
-                }
-              }}
+              onClick={() => setShowCancelConfirm(true)}
               disabled={cancelRetainer.isPending}
               className="flex items-center gap-1 px-3 py-1.5 text-label-01 font-medium text-danger active:bg-gray-10 rounded-lg border border-danger/20"
             >
@@ -242,6 +240,62 @@ function RetainerCard({
         {expanded && <RetainerPeriodsSection retainerId={retainer.id} />}
       </div>
     </Card>
+
+    {/* Cancel Confirmation Dialog */}
+    <Transition show={showCancelConfirm} as={Fragment}>
+      <Dialog onClose={() => setShowCancelConfirm(false)} className="relative z-[70]">
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-200"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-150"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 bg-black/40" />
+        </Transition.Child>
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-200"
+            enterFrom="opacity-0 scale-95"
+            enterTo="opacity-100 scale-100"
+            leave="ease-in duration-150"
+            leaveFrom="opacity-100 scale-100"
+            leaveTo="opacity-0 scale-95"
+          >
+            <Dialog.Panel className="bg-white rounded-2xl w-full max-w-sm p-5 space-y-4">
+              <Dialog.Title className="text-heading-02 text-gray-100">
+                Cancel Retainer
+              </Dialog.Title>
+              <p className="text-body-01 text-gray-50">
+                Are you sure you want to cancel this retainer agreement? This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowCancelConfirm(false)}
+                  className="flex-1 h-11 border border-gray-20 text-gray-70 font-medium text-body-01 rounded-lg active:bg-gray-10"
+                >
+                  Keep
+                </button>
+                <button
+                  onClick={() => {
+                    cancelRetainer.mutate(retainer.id);
+                    setShowCancelConfirm(false);
+                  }}
+                  disabled={cancelRetainer.isPending}
+                  className="flex-1 h-11 bg-danger text-white font-medium text-body-01 rounded-lg disabled:opacity-50"
+                >
+                  {cancelRetainer.isPending ? 'Cancelling...' : 'Cancel Retainer'}
+                </button>
+              </div>
+            </Dialog.Panel>
+          </Transition.Child>
+        </div>
+      </Dialog>
+    </Transition>
+    </>
   );
 }
 
