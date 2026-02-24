@@ -1,13 +1,15 @@
+import { useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useProduct, useUpdateProduct } from '@/queries';
+import { useProduct, useUpdateProduct, useUploadProductImage } from '@/queries';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card } from '@/components/ui/Card';
 import { DashboardSkeleton } from '@/components/ui/Skeleton';
 import { useUIStore } from '@/store/ui.store';
 import { ProductCategory, PRODUCT_CATEGORY_META } from '@/types/enums';
+import { CubeIcon, CameraIcon } from '@heroicons/react/24/outline';
 
 const productSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -34,7 +36,9 @@ export function ProductEditPage() {
   const navigate = useNavigate();
   const { data: product, isLoading } = useProduct(id!);
   const updateProduct = useUpdateProduct();
+  const uploadImage = useUploadProductImage();
   const showNotification = useUIStore((s) => s.showNotification);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -67,6 +71,30 @@ export function ProductEditPage() {
 
   const taxable = watch('taxable');
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !product) return;
+
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      showNotification('Error', 'Only JPEG, PNG, GIF, and WebP images are allowed', 'error');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      showNotification('Error', 'Image must be less than 2MB', 'error');
+      return;
+    }
+
+    try {
+      await uploadImage.mutateAsync({ productId: product.id, file });
+      showNotification('Success', 'Product image updated', 'success');
+    } catch {
+      showNotification('Error', 'Failed to upload image', 'error');
+    }
+
+    if (imageInputRef.current) imageInputRef.current.value = '';
+  };
+
   const onSubmit = async (data: ProductFormData) => {
     if (!id) return;
     try {
@@ -94,6 +122,51 @@ export function ProductEditPage() {
       <PageHeader title="Edit Product" backTo={`/app/products/${id}`} />
       <div className="page-content">
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+          {/* Product image */}
+          <Card>
+            <p className="text-label-01 text-gray-70 mb-3">Product Image</p>
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => imageInputRef.current?.click()}
+                disabled={uploadImage.isPending}
+                className="relative w-20 h-20 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden bg-primary-50 border-0 cursor-pointer"
+              >
+                {product.imageUrl ? (
+                  <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                ) : (
+                  <CubeIcon className="w-8 h-8 text-primary" />
+                )}
+                <div className="absolute inset-0 bg-black/0 active:bg-black/30 transition-colors flex items-center justify-center">
+                  <CameraIcon className="w-6 h-6 text-white opacity-0 active:opacity-100" />
+                </div>
+                {uploadImage.isPending && (
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  </div>
+                )}
+              </button>
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                className="hidden"
+                onChange={handleImageUpload}
+              />
+              <div className="flex-1">
+                <button
+                  type="button"
+                  onClick={() => imageInputRef.current?.click()}
+                  disabled={uploadImage.isPending}
+                  className="text-body-01 text-primary font-medium disabled:opacity-50"
+                >
+                  {uploadImage.isPending ? 'Uploading...' : product.imageUrl ? 'Change Image' : 'Upload Image'}
+                </button>
+                <p className="text-helper-01 text-gray-40 mt-0.5">JPEG, PNG, GIF, or WebP. Max 2MB.</p>
+              </div>
+            </div>
+          </Card>
+
           {/* Basic info */}
           <Card>
             <div className="space-y-3">
