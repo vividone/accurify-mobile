@@ -1,12 +1,15 @@
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useCreateProduct } from '@/queries';
+import { useCreateProduct, useUploadProductImage } from '@/queries';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card } from '@/components/ui/Card';
 import { useUIStore } from '@/store/ui.store';
 import { ProductCategory, PRODUCT_CATEGORY_META } from '@/types/enums';
+import type { Product } from '@/types/product.types';
+import { CubeIcon, CameraIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 
 const productSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -28,7 +31,11 @@ type ProductFormData = z.infer<typeof productSchema>;
 export function ProductCreatePage() {
   const navigate = useNavigate();
   const createProduct = useCreateProduct();
+  const uploadImage = useUploadProductImage();
   const showNotification = useUIStore((s) => s.showNotification);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const [createdProduct, setCreatedProduct] = useState<Product | null>(null);
+  const [imageUploaded, setImageUploaded] = useState(false);
 
   const {
     register,
@@ -58,18 +65,121 @@ export function ProductCreatePage() {
 
   const onSubmit = async (data: ProductFormData) => {
     try {
-      await createProduct.mutateAsync({
+      const product = await createProduct.mutateAsync({
         ...data,
         costPrice: data.costPrice || undefined,
         vatRate: data.taxable ? data.vatRate : 0,
       });
       showNotification('Success', 'Product created', 'success');
-      navigate('/app/products');
+      setCreatedProduct(product);
     } catch {
       showNotification('Error', 'Failed to create product', 'error');
     }
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !createdProduct) return;
+
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      showNotification('Error', 'Only JPEG, PNG, GIF, and WebP images are allowed', 'error');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      showNotification('Error', 'Image must be less than 2MB', 'error');
+      return;
+    }
+
+    try {
+      await uploadImage.mutateAsync({ productId: createdProduct.id, file });
+      showNotification('Success', 'Product image uploaded', 'success');
+      setImageUploaded(true);
+    } catch {
+      showNotification('Error', 'Failed to upload image', 'error');
+    }
+
+    if (imageInputRef.current) imageInputRef.current.value = '';
+  };
+
+  // Step 2: Image upload
+  if (createdProduct) {
+    return (
+      <>
+        <PageHeader title="Add Product Image" backTo="/app/products" />
+        <div className="page-content">
+          <div className="flex flex-col items-center pt-8 space-y-6">
+            {/* Success confirmation */}
+            <div className="flex flex-col items-center text-center">
+              <CheckCircleIcon className="w-12 h-12 text-success mb-2" />
+              <h2 className="text-heading-03 text-gray-100 font-semibold">
+                {createdProduct.name}
+              </h2>
+              <p className="text-body-01 text-gray-50">Product created successfully</p>
+            </div>
+
+            {/* Image upload area */}
+            <Card>
+              <p className="text-label-01 text-gray-70 mb-3">Product Image (optional)</p>
+              <div className="flex flex-col items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => imageInputRef.current?.click()}
+                  disabled={uploadImage.isPending}
+                  className="relative w-28 h-28 rounded-lg flex items-center justify-center overflow-hidden bg-primary-50 border-2 border-dashed border-primary/30 cursor-pointer"
+                >
+                  {imageUploaded ? (
+                    <CheckCircleIcon className="w-10 h-10 text-success" />
+                  ) : (
+                    <div className="flex flex-col items-center gap-1">
+                      <CameraIcon className="w-8 h-8 text-primary" />
+                      <span className="text-helper-01 text-primary">Tap to upload</span>
+                    </div>
+                  )}
+                  {uploadImage.isPending && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  )}
+                </button>
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  className="hidden"
+                  onChange={handleImageUpload}
+                />
+                <p className="text-helper-01 text-gray-40">JPEG, PNG, GIF, or WebP. Max 2MB.</p>
+                {imageUploaded && (
+                  <p className="text-body-01 text-success font-medium">Image uploaded!</p>
+                )}
+              </div>
+            </Card>
+
+            {/* Action buttons */}
+            <div className="w-full space-y-2 pt-4 pb-4">
+              <button
+                onClick={() => navigate(`/app/products/${createdProduct.id}`)}
+                className="w-full h-12 bg-primary text-white font-medium text-body-01 rounded-lg"
+              >
+                {imageUploaded ? 'View Product' : 'Done'}
+              </button>
+              {!imageUploaded && (
+                <button
+                  onClick={() => navigate('/app/products')}
+                  className="w-full h-12 border border-gray-30 text-gray-70 font-medium text-body-01 rounded-lg"
+                >
+                  Skip
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Step 1: Product details form
   return (
     <>
       <PageHeader title="New Product" backTo="/app/products" />
