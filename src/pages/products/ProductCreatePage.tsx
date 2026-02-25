@@ -9,7 +9,7 @@ import { Card } from '@/components/ui/Card';
 import { useUIStore } from '@/store/ui.store';
 import { ProductCategory, PRODUCT_CATEGORY_META } from '@/types/enums';
 import type { Product } from '@/types/product.types';
-import { CubeIcon, CameraIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { CameraIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 
 const productSchema = z.object({
   name: z.string().min(1, 'Name is required'),
