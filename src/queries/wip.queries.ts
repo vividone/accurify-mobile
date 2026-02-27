@@ -8,10 +8,11 @@ export const wipKeys = {
   project: (projectId: string) => [...wipKeys.projects(), projectId] as const,
 };
 
-export function useWipSummary() {
+export function useWipSummary(enabled = true) {
   return useQuery({
     queryKey: wipKeys.summary(),
     queryFn: () => wipApi.getSummary(),
+    enabled,
   });
 }
 

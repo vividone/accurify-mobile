@@ -29,3 +29,5 @@ export { wipApi } from './wip.api';
 export { projectRetainersApi } from './project-retainers.api';
 export { milestonesApi } from './milestones.api';
 export { intelligenceApi } from './intelligence.api';
+export { reconciliationApi } from './reconciliation.api';
+export { onboardingApi } from './onboarding.api';

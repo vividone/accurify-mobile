@@ -63,6 +63,9 @@ import { ProjectHealthPage } from '@/pages/intelligence/ProjectHealthPage';
 import { UtilizationPage } from '@/pages/intelligence/UtilizationPage';
 import { RetainerHealthPage } from '@/pages/intelligence/RetainerHealthPage';
 import { RateAnalysisPage } from '@/pages/intelligence/RateAnalysisPage';
+import { BankReconciliationPage } from '@/pages/reconciliation/BankReconciliationPage';
+import { CashFlowForecastPage } from '@/pages/reports/CashFlowForecastPage';
+import { MarginTrendPage } from '@/pages/reports/MarginTrendPage';
 
 export const router = createBrowserRouter([
   // Public auth routes
@@ -136,9 +139,12 @@ export const router = createBrowserRouter([
       { path: 'transactions', element: <TransactionsPage /> },
       { path: 'transactions/new', element: <TransactionCreatePage /> },
       { path: 'income-statement', element: <IncomeStatementPage /> },
+      { path: 'reconciliation', element: <PremiumRoute promptType="bankSyncLocked"><BankReconciliationPage /></PremiumRoute> },
       { path: 'ar-aging', element: <PremiumRoute promptType="glFeatureLocked"><ARAgingPage /></PremiumRoute> },
       { path: 'ap-aging', element: <PremiumRoute promptType="glFeatureLocked"><APAgingPage /></PremiumRoute> },
       { path: 'product-profitability', element: <PremiumRoute promptType="glFeatureLocked"><ProductProfitabilityPage /></PremiumRoute> },
+      { path: 'reports/cash-flow-forecast', element: <PremiumRoute promptType="glFeatureLocked"><CashFlowForecastPage /></PremiumRoute> },
+      { path: 'reports/margin-trend', element: <PremiumRoute promptType="glFeatureLocked"><MarginTrendPage /></PremiumRoute> },
       { path: 'tax-overview', element: <TaxOverviewPage /> },
       { path: 'payment-settings', element: <PaymentSettingsPage /> },
       { path: 'billing', element: <BillingPage /> },

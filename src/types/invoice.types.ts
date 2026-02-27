@@ -28,6 +28,9 @@ export interface Invoice {
   items: InvoiceItem[];
   sentAt?: string;
   paidAt?: string;
+  // Partial payment tracking
+  amountPaidKobo?: number;
+  balanceDueKobo?: number;
   createdAt: string;
   updatedAt: string;
   // Proforma conversion tracking
@@ -67,6 +70,27 @@ export interface InvoiceRequest {
 
 export interface MarkPaidRequest {
   paidAt: string;
+}
+
+export interface RecordPaymentRequest {
+  amountKobo: number;
+  whtAmountKobo?: number;
+  paymentDate: string;
+  paymentMethod?: string;
+  reference?: string;
+  notes?: string;
+}
+
+export interface InvoicePaymentRecord {
+  id: string;
+  invoiceId: string;
+  amountKobo: number;
+  whtAmountKobo: number;
+  paymentDate: string;
+  paymentMethod?: string;
+  reference?: string;
+  notes?: string;
+  createdAt: string;
 }
 
 export interface InvoiceFilters {

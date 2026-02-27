@@ -4,6 +4,7 @@ import type {
   InvoiceRequest,
   InvoiceFilters,
   MarkPaidRequest,
+  RecordPaymentRequest,
 } from '@/types';
 
 export const invoiceKeys = {
@@ -144,5 +145,26 @@ export function useConvertToInvoice() {
       queryClient.invalidateQueries({ queryKey: invoiceKeys.lists() });
       queryClient.invalidateQueries({ queryKey: invoiceKeys.detail(id) });
     },
+  });
+}
+
+export function useRecordInvoicePayment(invoiceId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: RecordPaymentRequest) => invoicesApi.recordPayment(invoiceId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: invoiceKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: invoiceKeys.detail(invoiceId) });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: [...invoiceKeys.detail(invoiceId), 'payments'] });
+    },
+  });
+}
+
+export function useInvoicePaymentRecords(invoiceId: string) {
+  return useQuery({
+    queryKey: [...invoiceKeys.detail(invoiceId), 'payments'],
+    queryFn: () => invoicesApi.getPaymentRecords(invoiceId),
+    enabled: !!invoiceId,
   });
 }

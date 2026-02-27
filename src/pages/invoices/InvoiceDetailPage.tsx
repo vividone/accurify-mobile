@@ -5,6 +5,7 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { Card } from '@/components/ui/Card';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { DashboardSkeleton } from '@/components/ui/Skeleton';
+import { RecordPaymentSheet } from '@/components/invoices/RecordPaymentSheet';
 import { formatCurrency } from '@/utils/currency';
 import { formatDate } from '@/utils/date';
 import { InvoiceStatus, InvoiceType } from '@/types';
@@ -27,6 +28,7 @@ export function InvoiceDetailPage() {
   const showNotification = useUIStore((s) => s.showNotification);
   const business = useBusinessStore((s) => s.business);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [recordPaymentOpen, setRecordPaymentOpen] = useState(false);
 
   if (isLoading || !invoice) {
     return <DashboardSkeleton />;
@@ -75,6 +77,33 @@ export function InvoiceDetailPage() {
             Due {formatDate(invoice.dueDate)}
           </p>
         </Card>
+
+        {/* Partial payment progress */}
+        {invoice.status === InvoiceStatus.PARTIALLY_PAID && invoice.balanceDueKobo !== undefined && (
+          <Card>
+            <p className="text-label-01 text-gray-50 mb-2">Payment Progress</p>
+            <div className="flex justify-between text-body-01 mb-1">
+              <span className="text-gray-50">Paid so far</span>
+              <span className="tabular-nums text-success font-medium">
+                {formatCurrency((invoice.amountPaidKobo ?? 0) / 100)}
+              </span>
+            </div>
+            <div className="flex justify-between text-body-01 mb-2">
+              <span className="text-gray-50">Balance due</span>
+              <span className="tabular-nums text-primary font-semibold">
+                {formatCurrency(invoice.balanceDueKobo / 100)}
+              </span>
+            </div>
+            <div className="w-full bg-gray-20 rounded-full h-2">
+              <div
+                className="bg-success h-2 rounded-full"
+                style={{
+                  width: `${Math.min(100, ((invoice.amountPaidKobo ?? 0) / invoice.total) * 100)}%`,
+                }}
+              />
+            </div>
+          </Card>
+        )}
 
         {/* Client */}
         <Card>
@@ -175,6 +204,18 @@ export function InvoiceDetailPage() {
                 {actionLoading === 'deleted' ? 'Deleting...' : 'Delete Invoice'}
               </button>
             </>
+          )}
+
+          {(invoice.status === InvoiceStatus.SENT ||
+            invoice.status === InvoiceStatus.OVERDUE ||
+            invoice.status === InvoiceStatus.PARTIALLY_PAID) &&
+            invoice.type !== InvoiceType.PROFORMA && (
+            <button
+              onClick={() => setRecordPaymentOpen(true)}
+              className="w-full h-12 bg-primary text-white font-medium text-body-01 rounded-lg"
+            >
+              Record Partial Payment
+            </button>
           )}
 
           {(invoice.status === InvoiceStatus.SENT || invoice.status === InvoiceStatus.OVERDUE) && (
@@ -319,6 +360,14 @@ export function InvoiceDetailPage() {
           )}
         </div>
       </div>
+
+      <RecordPaymentSheet
+        open={recordPaymentOpen}
+        onClose={() => setRecordPaymentOpen(false)}
+        invoiceId={invoice.id}
+        invoiceTotal={invoice.total}
+        balanceDue={invoice.balanceDueKobo !== undefined ? invoice.balanceDueKobo / 100 : invoice.total}
+      />
     </>
   );
 }

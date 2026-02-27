@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDashboard, useWipSummary } from '@/queries';
 import { useCashFlowForecast, useMarginTrend } from '@/queries/gl.queries';
@@ -12,6 +12,15 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useBusinessStore } from '@/store/business.store';
 import { BusinessType } from '@/types/enums';
 import { useProjectHealth, useRetainerHealth } from '@/queries/intelligence.queries';
+import { useOnboardingStatus } from '@/queries/onboarding.queries';
+import { GoalSelectionSheet } from '@/components/onboarding/GoalSelectionSheet';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+
+import { InvoiceFastPathWizard } from '@/components/onboarding/wizards/InvoiceFastPathWizard';
+import { BookkeepingFastPathWizard } from '@/components/onboarding/wizards/BookkeepingFastPathWizard';
+import { TaxFastPathWizard } from '@/components/onboarding/wizards/TaxFastPathWizard';
+import type { FastPathFlow } from '@/utils/fast-path.utils';
+import type { OnboardingGoal } from '@/types/onboarding.types';
 import {
   BanknotesIcon,
   ClockIcon,
@@ -163,10 +172,46 @@ export function DashboardPage() {
   const isGoodsBusiness = business?.type === BusinessType.GOODS;
 
   // Service Intelligence data (only fetched for service businesses)
-  const isServiceBusiness = !isGoodsBusiness;
+  const isServiceBusiness = business?.type === BusinessType.SERVICE;
   const { data: projectHealth } = useProjectHealth(isServiceBusiness);
   const { data: retainerHealth } = useRetainerHealth(isServiceBusiness);
-  const { data: wipSummary } = useWipSummary();
+  const { data: wipSummary } = useWipSummary(isServiceBusiness);
+
+  // Onboarding state
+  const { data: onboardingStatus } = useOnboardingStatus();
+  const [goalSheetOpen, setGoalSheetOpen] = useState(false);
+  const [openWizard, setOpenWizard] = useState<FastPathFlow | null>(null);
+
+  // Show goal selection on first visit if no goal set
+  useEffect(() => {
+    if (onboardingStatus && !onboardingStatus.businessGoal) {
+      setGoalSheetOpen(true);
+    }
+  }, [onboardingStatus?.businessGoal]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleGoalSelected = (goal: OnboardingGoal) => {
+    setGoalSheetOpen(false);
+    if (goal === 'SEND_INVOICES') {
+      setOpenWizard('invoice');
+    } else if (goal === 'TRACK_EXPENSES' || goal === 'FULL_ACCOUNTING') {
+      setOpenWizard('bookkeeping');
+    } else if (goal === 'MANAGE_TAXES') {
+      setOpenWizard('tax');
+    }
+  };
+
+  const handleGetStartedBanner = () => {
+    const goal = onboardingStatus?.businessGoal;
+    if (goal === 'SEND_INVOICES') {
+      setOpenWizard('invoice');
+    } else if (goal === 'TRACK_EXPENSES' || goal === 'FULL_ACCOUNTING') {
+      setOpenWizard('bookkeeping');
+    } else if (goal === 'MANAGE_TAXES') {
+      setOpenWizard('tax');
+    } else {
+      setGoalSheetOpen(true);
+    }
+  };
 
   const handleRefresh = useCallback(async () => {
     await Promise.all([
@@ -267,6 +312,25 @@ export function DashboardPage() {
   return (
     <div className="page-content space-y-5" ref={containerRef}>
       <PullIndicator />
+
+      {/* Onboarding Setup Banner */}
+      {onboardingStatus && !onboardingStatus.isComplete && (
+        <div className="bg-blue-50 rounded-xl p-4 flex items-center justify-between">
+          <div>
+            <p className="text-body-01 font-medium text-blue-800">Complete your setup</p>
+            <p className="text-helper-01 text-blue-600">
+              {onboardingStatus.completedSteps}/{onboardingStatus.totalSteps} steps done
+            </p>
+          </div>
+          <button
+            onClick={handleGetStartedBanner}
+            className="text-body-01 font-medium text-blue-700 whitespace-nowrap"
+          >
+            Get started →
+          </button>
+        </div>
+      )}
+
       {/* Summary Cards */}
       <div className="grid grid-cols-2 gap-3">
         {summaryCards.map((card) => (
@@ -286,6 +350,50 @@ export function DashboardPage() {
           </Card>
         ))}
       </div>
+
+      {/* Margin Trend Chart */}
+      {marginTrend?.monthlyData && marginTrend.monthlyData.length > 0 && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mx-4 mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-gray-900">Gross Margin Trend</h3>
+            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+              (marginTrend.currentMonthMargin || 0) >= 20
+                ? 'bg-green-100 text-green-700'
+                : (marginTrend.currentMonthMargin || 0) >= 0
+                ? 'bg-yellow-100 text-yellow-700'
+                : 'bg-red-100 text-red-700'
+            }`}>
+              {(marginTrend.currentMonthMargin || 0).toFixed(1)}% this month
+            </span>
+          </div>
+          <ResponsiveContainer width="100%" height={120}>
+            <BarChart data={marginTrend.monthlyData} margin={{ top: 4, right: 0, left: -20, bottom: 0 }}>
+              <XAxis
+                dataKey="month"
+                tickFormatter={(val: string) => {
+                  const months = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+                  return months[parseInt(val.split('-')[1], 10) - 1] || '';
+                }}
+                tick={{ fontSize: 10, fill: '#6b7280' }}
+              />
+              <YAxis tickFormatter={(v) => `${v}%`} tick={{ fontSize: 10, fill: '#6b7280' }} />
+              <Tooltip
+                formatter={(v: number | undefined) => [v != null ? `${v.toFixed(1)}%` : '—', 'Margin']}
+                contentStyle={{ fontSize: 11, borderRadius: 8 }}
+              />
+              {/* @ts-ignore recharts Cell children type */}
+              <Bar dataKey="marginPercent" radius={[3, 3, 0, 0]}>
+                {marginTrend.monthlyData.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={entry.marginPercent >= 20 ? '#16a34a' : entry.marginPercent >= 0 ? '#d97706' : '#dc2626'}
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
 
       {/* Quick Actions */}
       <div>
@@ -411,6 +519,25 @@ export function DashboardPage() {
           </Card>
         </div>
       )}
+
+      {/* Onboarding Wizards */}
+      <GoalSelectionSheet
+        open={goalSheetOpen}
+        onClose={() => setGoalSheetOpen(false)}
+        onGoalSelected={handleGoalSelected}
+      />
+      <InvoiceFastPathWizard
+        open={openWizard === 'invoice'}
+        onClose={() => setOpenWizard(null)}
+      />
+      <BookkeepingFastPathWizard
+        open={openWizard === 'bookkeeping'}
+        onClose={() => setOpenWizard(null)}
+      />
+      <TaxFastPathWizard
+        open={openWizard === 'tax'}
+        onClose={() => setOpenWizard(null)}
+      />
     </div>
   );
 }

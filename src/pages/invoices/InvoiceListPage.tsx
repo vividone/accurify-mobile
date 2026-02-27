@@ -34,6 +34,7 @@ export function InvoiceListPage() {
   const queryClient = useQueryClient();
   const [activeFilter, setActiveFilter] = useState<InvoiceStatus | 'ALL'>('ALL');
   const [activeTypeFilter, setActiveTypeFilter] = useState<InvoiceType | 'ALL'>('ALL');
+  const [search, setSearch] = useState('');
   const [page] = useState(0);
   const status = activeFilter === 'ALL' ? undefined : activeFilter;
   const type = activeTypeFilter === 'ALL' ? undefined : activeTypeFilter;
@@ -41,6 +42,7 @@ export function InvoiceListPage() {
   const { data: invoicesData, isLoading } = useInvoices(page, 50, {
     ...(status ? { status } : {}),
     ...(type ? { type } : {}),
+    ...(search ? { search } : {}),
   });
   const invoices = invoicesData?.content ?? [];
 
@@ -59,6 +61,8 @@ export function InvoiceListPage() {
         <input
           type="text"
           placeholder="Search invoices..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
           className="w-full h-10 pl-10 pr-4 bg-white border border-gray-20 rounded-lg text-body-01 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
         />
       </div>

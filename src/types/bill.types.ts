@@ -2,6 +2,7 @@ export enum BillStatus {
   DRAFT = 'DRAFT',
   APPROVED = 'APPROVED',
   PAID = 'PAID',
+  PARTIALLY_PAID = 'PARTIALLY_PAID',
   CANCELLED = 'CANCELLED',
 }
 
@@ -100,6 +101,9 @@ export interface Bill {
   documentUrl?: string;
   approvedAt?: string;
   paidAt?: string;
+  // Partial payment tracking
+  amountPaidKobo?: number;
+  balanceDueKobo?: number;
   createdAt: string;
   updatedAt: string;
   supplier?: {
