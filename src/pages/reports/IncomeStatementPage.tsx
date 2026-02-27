@@ -126,7 +126,7 @@ export function IncomeStatementPage() {
         </Card>
 
         {basis === 'CASH' && (
-          <div className="bg-blue-50 rounded-lg px-3 py-2.5 flex items-start gap-2">
+          <div className="bg-blue-50 rounded-lg px-3 py-2.5 flex items-start gap-2 mb-4">
             <InformationCircleIcon className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
             <p className="text-helper-01 text-blue-700">
               Cash basis — for management purposes only. Does not comply with IFRS.

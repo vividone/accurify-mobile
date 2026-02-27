@@ -28,3 +28,5 @@ export * from './wip.queries';
 export * from './project-retainers.queries';
 export * from './milestones.queries';
 export * from './intelligence.queries';
+export * from './reconciliation.queries';
+export * from './onboarding.queries';

@@ -20,6 +20,9 @@ import {
   ClockIcon,
   XMarkIcon,
   FolderIcon,
+  ArrowPathIcon,
+  ChartBarIcon,
+  ArrowTrendingUpIcon,
 } from '@heroicons/react/24/outline';
 import { useUIStore } from '@/store/ui.store';
 import { useAuthStore } from '@/store/auth.store';
@@ -73,8 +76,11 @@ export function MoreMenu() {
       title: 'Accurify Books',
       items: [
         { label: 'Income Statement', icon: DocumentChartBarIcon, onClick: () => go('/app/income-statement') },
+        { label: 'Bank Reconciliation', icon: ArrowPathIcon, onClick: () => go('/app/reconciliation') },
         { label: 'Tax Overview', icon: ReceiptPercentIcon, onClick: () => go('/app/tax-overview') },
         { label: 'Fixed Assets', icon: CubeIcon, onClick: () => go('/app/assets') },
+        { label: 'Cash Flow Forecast', icon: ChartBarIcon, onClick: () => go('/app/reports/cash-flow-forecast') },
+        { label: 'Margin Trend', icon: ArrowTrendingUpIcon, onClick: () => go('/app/reports/margin-trend') },
       ],
     });
 

@@ -6,6 +6,8 @@ import type {
   InvoiceRequest,
   InvoiceFilters,
   MarkPaidRequest,
+  RecordPaymentRequest,
+  InvoicePaymentRecord,
 } from '@/types';
 
 const INVOICES_BASE = '/invoices';
@@ -123,6 +125,23 @@ export const invoicesApi = {
   convertToInvoice: async (id: string): Promise<Invoice> => {
     const response = await apiClient.post<ApiResponse<Invoice>>(
       `${INVOICES_BASE}/${id}/convert`
+    );
+    return response.data.data!;
+  },
+
+  // Record a partial payment
+  recordPayment: async (id: string, data: RecordPaymentRequest): Promise<Invoice> => {
+    const response = await apiClient.post<ApiResponse<Invoice>>(
+      `${INVOICES_BASE}/${id}/record-payment`,
+      data
+    );
+    return response.data.data!;
+  },
+
+  // Get payment records for an invoice
+  getPaymentRecords: async (id: string): Promise<InvoicePaymentRecord[]> => {
+    const response = await apiClient.get<ApiResponse<InvoicePaymentRecord[]>>(
+      `${INVOICES_BASE}/${id}/payment-records`
     );
     return response.data.data!;
   },
