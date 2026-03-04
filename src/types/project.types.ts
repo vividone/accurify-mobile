@@ -5,10 +5,15 @@ export enum ProjectStatus {
   ARCHIVED = 'ARCHIVED',
 }
 
-export enum TimeEntryStatus {
-  DRAFT = 'DRAFT',
-  APPROVED = 'APPROVED',
-  INVOICED = 'INVOICED',
+export enum BudgetCategory {
+  MATERIALS = 'MATERIALS',
+  LABOUR = 'LABOUR',
+  TRANSPORT = 'TRANSPORT',
+  EQUIPMENT = 'EQUIPMENT',
+  SUBCONTRACTOR = 'SUBCONTRACTOR',
+  MARKETING = 'MARKETING',
+  UTILITIES = 'UTILITIES',
+  OTHER = 'OTHER',
 }
 
 export interface Project {
@@ -19,19 +24,15 @@ export interface Project {
   clientName?: string;
   status: ProjectStatus;
   budgetAmount?: number;
-  hourlyRate?: number;
   startDate?: string;
   endDate?: string;
   color?: string;
-  totalHours: number;
-  billableHours: number;
-  billableAmount?: number;
+  totalBudget: number;
+  totalIncome: number;
+  totalExpenses: number;
+  profit: number;
+  budgetUsedPercent?: number;
   billingModel?: string;
-  contractValue?: number;
-  estimatedCost?: number;
-  wipBalance?: number;
-  totalBilled?: number;
-  totalRecognizedRevenue?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -42,63 +43,64 @@ export interface ProjectRequest {
   clientId?: string;
   status?: ProjectStatus;
   budgetAmount?: number;
-  hourlyRate?: number;
   startDate?: string;
   endDate?: string;
   color?: string;
 }
 
-export interface TimeEntry {
+export interface BudgetLineItem {
   id: string;
   projectId: string;
-  projectName: string;
-  userId: string;
-  userName: string;
-  description?: string;
-  entryDate: string;
-  durationMinutes: number;
-  billable: boolean;
-  hourlyRate?: number;
-  amount?: number;
-  status: TimeEntryStatus;
-  notes?: string;
-  createdAt: string;
-}
-
-export interface TimeEntryRequest {
-  projectId: string;
-  description?: string;
-  entryDate: string;
-  durationMinutes: number;
-  billable?: boolean;
-  hourlyRate?: number;
-  notes?: string;
-}
-
-export interface TeamMember {
-  id: string;
-  name: string;
-  userId?: string;
-  userName?: string;
-  roleTitle?: string;
-  employmentType: string;
-  annualCost?: number;
-  availableHoursPerWeek: number;
-  defaultBillingRate?: number;
-  costRate?: number;
-  active: boolean;
+  category: BudgetCategory;
+  description: string;
+  estimatedAmount: number;
+  sortOrder: number;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface TeamMemberRequest {
+export interface BudgetLineItemRequest {
+  category: BudgetCategory;
+  description: string;
+  estimatedAmount: number;
+  sortOrder?: number;
+}
+
+export interface ProjectFinancialSummary {
+  totalBudget: number;
+  totalIncome: number;
+  totalExpenses: number;
+  profit: number;
+  budgetUsedPercent: number | null;
+  incomeHealth: string;
+  expenseHealth: string;
+  profitHealth: string;
+  deliveryHealth: string;
+}
+
+export interface MilestoneRequest {
   name: string;
-  userId?: string;
-  roleTitle?: string;
-  employmentType?: string;
-  annualCost?: number;
-  availableHoursPerWeek?: number;
-  defaultBillingRate?: number;
+  description?: string;
+  amount?: number;
+  percentage?: number;
+  dueDate?: string;
+  sortOrder?: number;
+  status?: string;
+}
+
+export interface MilestoneResponse {
+  id: string;
+  projectId: string;
+  name: string;
+  description?: string | null;
+  amount?: number | null;
+  percentage?: number | null;
+  status: string;
+  dueDate?: string | null;
+  completedAt?: string | null;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ProjectExpense {
@@ -133,13 +135,10 @@ export interface ProjectProfitability {
   clientName?: string;
   status: string;
   revenue: number;
-  laborCost: number;
   expenseCost: number;
   totalCos: number;
   grossMargin: number;
   grossMarginPercent: number;
-  totalHours: number;
-  billableHours: number;
   budget?: number;
   budgetUsedPercent?: number;
 }
@@ -152,6 +151,4 @@ export interface ClientProfitability {
   totalCos: number;
   grossMargin: number;
   grossMarginPercent: number;
-  totalHours: number;
-  billableHours: number;
 }

@@ -3,53 +3,65 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Dialog, Transition } from '@headlessui/react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
-  ClockIcon,
+  ListBulletIcon,
   PencilIcon,
   TrashIcon,
   PlusIcon,
   XMarkIcon,
+  PencilSquareIcon,
 } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 import {
   useProject,
   useUpdateProject,
   useDeleteProject,
-  useProjectTimeEntries,
-  useCreateTimeEntry,
+  useProjectBudget,
+  useProjectFinancialSummary,
+  useCreateBudgetLineItem,
+  useUpdateBudgetLineItem,
+  useDeleteBudgetLineItem,
   projectKeys,
-  timeEntryKeys,
 } from '@/queries';
-import { ProjectStatus } from '@/types';
-import type { ProjectRequest, TimeEntryRequest } from '@/types';
+import { ProjectStatus, BudgetCategory } from '@/types';
+import type { ProjectRequest, BudgetLineItem, BudgetLineItemRequest } from '@/types';
 import { Card } from '@/components/ui/Card';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-import { Badge } from '@/components/ui/Badge';
 import { DashboardSkeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { formatCurrency } from '@/utils/currency';
-import { formatDate, formatDuration, getTodayString } from '@/utils/date';
+import { formatDate } from '@/utils/date';
+
+const PROJECT_COLORS = [
+  '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6',
+  '#EC4899', '#06B6D4', '#F97316',
+];
+
+const BUDGET_CATEGORIES = Object.values(BudgetCategory);
 
 export function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: project, isLoading } = useProject(id!);
-  const { data: timeEntriesData } = useProjectTimeEntries(id!, 0, 50);
-  const timeEntries = timeEntriesData?.content ?? [];
+  const { data: lineItems = [] } = useProjectBudget(id!);
+  const { data: summary } = useProjectFinancialSummary(id!);
 
   const deleteProject = useDeleteProject();
-  const [showLogTimeSheet, setShowLogTimeSheet] = useState(false);
+  const deleteBudgetLineItem = useDeleteBudgetLineItem();
+
   const [showEditSheet, setShowEditSheet] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showAddLineItem, setShowAddLineItem] = useState(false);
+  const [editingLineItem, setEditingLineItem] = useState<BudgetLineItem | null>(null);
+  const [deletingLineItem, setDeletingLineItem] = useState<BudgetLineItem | null>(null);
 
   const handleRefresh = useCallback(async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: projectKeys.detail(id!) }),
-      queryClient.invalidateQueries({
-        queryKey: [...timeEntryKeys.all, 'by-project', id],
-      }),
+      queryClient.invalidateQueries({ queryKey: projectKeys.budget(id!) }),
+      queryClient.invalidateQueries({ queryKey: projectKeys.financialSummary(id!) }),
     ]);
   }, [queryClient, id]);
 
@@ -64,14 +76,21 @@ export function ProjectDetailPage() {
     }
   };
 
+  const handleDeleteLineItem = async () => {
+    if (!deletingLineItem) return;
+    try {
+      await deleteBudgetLineItem.mutateAsync({ projectId: id!, id: deletingLineItem.id });
+      setDeletingLineItem(null);
+    } catch {
+      // Error handled by React Query
+    }
+  };
+
   if (isLoading || !project) {
     return <DashboardSkeleton />;
   }
 
-  const budgetRemaining =
-    project.budgetAmount != null && project.billableAmount != null
-      ? project.budgetAmount - project.billableAmount
-      : null;
+  const profit = summary?.profit ?? project.profit ?? 0;
 
   return (
     <>
@@ -98,44 +117,60 @@ export function ProjectDetailPage() {
       <div className="page-content space-y-4" ref={containerRef}>
         <PullIndicator />
 
-        {/* Summary cards */}
+        {/* Financial Summary Cards */}
         <div className="grid grid-cols-2 gap-3">
           <Card>
-            <p className="text-helper-01 text-gray-40 mb-1">Total Hours</p>
+            <p className="text-helper-01 text-gray-40 mb-1">Budget</p>
             <p className="text-heading-02 text-gray-100">
-              {formatDuration(Math.round(project.totalHours * 60))}
+              {formatCurrency(summary?.totalBudget ?? project.totalBudget)}
             </p>
           </Card>
           <Card>
-            <p className="text-helper-01 text-gray-40 mb-1">Billable Hours</p>
-            <p className="text-heading-02 text-gray-100">
-              {formatDuration(Math.round(project.billableHours * 60))}
+            <p className="text-helper-01 text-gray-40 mb-1">Income</p>
+            <p className="text-heading-02 text-success-dark">
+              {formatCurrency(summary?.totalIncome ?? project.totalIncome)}
             </p>
           </Card>
           <Card>
-            <p className="text-helper-01 text-gray-40 mb-1">Billable Amount</p>
+            <p className="text-helper-01 text-gray-40 mb-1">Expenses</p>
             <p className="text-heading-02 text-gray-100">
-              {project.billableAmount != null
-                ? formatCurrency(project.billableAmount)
-                : '--'}
+              {formatCurrency(summary?.totalExpenses ?? project.totalExpenses)}
             </p>
           </Card>
           <Card>
-            <p className="text-helper-01 text-gray-40 mb-1">Budget Remaining</p>
-            <p
-              className={clsx(
-                'text-heading-02',
-                budgetRemaining != null && budgetRemaining < 0
-                  ? 'text-danger'
-                  : 'text-gray-100'
-              )}
-            >
-              {budgetRemaining != null
-                ? formatCurrency(budgetRemaining)
-                : '--'}
+            <p className="text-helper-01 text-gray-40 mb-1">Profit</p>
+            <p className={clsx('text-heading-02', profit >= 0 ? 'text-success-dark' : 'text-danger')}>
+              {formatCurrency(profit)}
             </p>
           </Card>
         </div>
+
+        {/* Budget Used Progress */}
+        {(summary?.budgetUsedPercent ?? project.budgetUsedPercent) != null && (
+          <Card>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-label-01 text-gray-50">Budget Used</p>
+              <p className="text-label-01 text-gray-70 font-medium">
+                {((summary?.budgetUsedPercent ?? project.budgetUsedPercent) as number).toFixed(0)}%
+              </p>
+            </div>
+            <div className="w-full h-2 bg-gray-10 rounded-full overflow-hidden">
+              <div
+                className={clsx(
+                  'h-full rounded-full transition-all',
+                  (summary?.budgetUsedPercent ?? project.budgetUsedPercent ?? 0) > 100
+                    ? 'bg-danger'
+                    : (summary?.budgetUsedPercent ?? project.budgetUsedPercent ?? 0) > 80
+                    ? 'bg-warning-dark'
+                    : 'bg-primary'
+                )}
+                style={{
+                  width: `${Math.min(summary?.budgetUsedPercent ?? project.budgetUsedPercent ?? 0, 100)}%`,
+                }}
+              />
+            </div>
+          </Card>
+        )}
 
         {/* Project info */}
         <Card>
@@ -148,14 +183,6 @@ export function ProjectDetailPage() {
               <div className="flex items-center justify-between">
                 <span className="text-label-01 text-gray-50">Client</span>
                 <span className="text-body-01 text-gray-100">{project.clientName}</span>
-              </div>
-            )}
-            {project.hourlyRate != null && (
-              <div className="flex items-center justify-between">
-                <span className="text-label-01 text-gray-50">Hourly Rate</span>
-                <span className="text-body-01 text-gray-100">
-                  {formatCurrency(project.hourlyRate)}/hr
-                </span>
               </div>
             )}
             {project.startDate && (
@@ -183,52 +210,54 @@ export function ProjectDetailPage() {
           </div>
         </Card>
 
-        {/* Time entries section */}
+        {/* Budget Line Items */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-heading-02 text-gray-100">Time Entries</h2>
+            <h2 className="text-heading-02 text-gray-100">Budget</h2>
             <button
-              onClick={() => setShowLogTimeSheet(true)}
+              onClick={() => setShowAddLineItem(true)}
               className="flex items-center gap-1 px-3 py-1.5 bg-primary text-white text-label-01 font-medium rounded-lg"
             >
               <PlusIcon className="w-4 h-4" />
-              Log Time
+              Add Item
             </button>
           </div>
 
-          {timeEntries.length === 0 ? (
+          {lineItems.length === 0 ? (
             <EmptyState
-              icon={ClockIcon}
-              title="No time logged"
-              description="Log your first time entry for this project."
+              icon={ListBulletIcon}
+              title="No budget items"
+              description="Add line items to break down your project budget by category."
             />
           ) : (
             <div className="space-y-2">
-              {timeEntries.map((entry) => (
-                <Card key={entry.id}>
-                  <div className="flex items-start justify-between">
+              {lineItems.map((item) => (
+                <Card key={item.id}>
+                  <div className="flex items-center justify-between">
                     <div className="flex-1 min-w-0">
-                      <p className="text-body-01 text-gray-100 truncate">
-                        {entry.description || 'No description'}
+                      <p className="text-helper-01 text-gray-40 uppercase text-[10px] tracking-wide">
+                        {item.category}
                       </p>
-                      <p className="text-helper-01 text-gray-40">
-                        {formatDate(entry.entryDate)}
-                      </p>
+                      <p className="text-body-01 text-gray-100 truncate">{item.description}</p>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0 ml-3">
-                      {entry.billable && (
-                        <Badge variant="success">Billable</Badge>
-                      )}
-                      <span className="text-body-01 font-medium text-gray-100 tabular-nums">
-                        {formatDuration(entry.durationMinutes)}
-                      </span>
+                    <div className="flex items-center gap-2 ml-3 flex-shrink-0">
+                      <p className="text-body-01 font-medium text-gray-100 tabular-nums">
+                        {formatCurrency(item.estimatedAmount)}
+                      </p>
+                      <button
+                        onClick={() => setEditingLineItem(item)}
+                        className="p-1.5 text-gray-40 active:bg-gray-10 rounded"
+                      >
+                        <PencilSquareIcon className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => setDeletingLineItem(item)}
+                        className="p-1.5 text-danger active:bg-danger-light rounded"
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
-                  {entry.amount != null && (
-                    <p className="text-helper-01 text-gray-50 mt-1">
-                      {formatCurrency(entry.amount)}
-                    </p>
-                  )}
                 </Card>
               ))}
             </div>
@@ -236,22 +265,77 @@ export function ProjectDetailPage() {
         </div>
       </div>
 
-      {/* Log Time Bottom Sheet */}
-      <LogTimeSheet
-        open={showLogTimeSheet}
-        onClose={() => setShowLogTimeSheet(false)}
+      {/* Add / Edit Budget Line Item Sheet */}
+      <BudgetLineItemSheet
+        open={showAddLineItem || !!editingLineItem}
+        onClose={() => {
+          setShowAddLineItem(false);
+          setEditingLineItem(null);
+        }}
         projectId={id!}
-        defaultRate={project.hourlyRate}
+        lineItem={editingLineItem}
       />
 
-      {/* Edit Project Bottom Sheet */}
+      {/* Edit Project Sheet */}
       <EditProjectSheet
         open={showEditSheet}
         onClose={() => setShowEditSheet(false)}
         project={project}
       />
 
-      {/* Delete Confirmation */}
+      {/* Delete Line Item Confirmation */}
+      <Transition show={!!deletingLineItem} as={Fragment}>
+        <Dialog onClose={() => setDeletingLineItem(null)} className="relative z-[60]">
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-200"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-150"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black/40" />
+          </Transition.Child>
+          <div className="fixed inset-0 flex items-center justify-center p-4">
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-200"
+              enterFrom="opacity-0 scale-95"
+              enterTo="opacity-100 scale-100"
+              leave="ease-in duration-150"
+              leaveFrom="opacity-100 scale-100"
+              leaveTo="opacity-0 scale-95"
+            >
+              <Dialog.Panel className="bg-white rounded-xl p-5 w-full max-w-sm">
+                <Dialog.Title className="text-heading-02 text-gray-100 mb-2">
+                  Remove Budget Item
+                </Dialog.Title>
+                <p className="text-body-01 text-gray-50 mb-5">
+                  Remove &ldquo;{deletingLineItem?.description}&rdquo; from the budget?
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setDeletingLineItem(null)}
+                    className="flex-1 h-11 bg-gray-10 text-gray-100 font-medium text-body-01 rounded-lg"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteLineItem}
+                    disabled={deleteBudgetLineItem.isPending}
+                    className="flex-1 h-11 bg-danger text-white font-medium text-body-01 rounded-lg disabled:opacity-50"
+                  >
+                    {deleteBudgetLineItem.isPending ? 'Removing...' : 'Remove'}
+                  </button>
+                </div>
+              </Dialog.Panel>
+            </Transition.Child>
+          </div>
+        </Dialog>
+      </Transition>
+
+      {/* Delete Project Confirmation */}
       <Transition show={showDeleteConfirm} as={Fragment}>
         <Dialog onClose={() => setShowDeleteConfirm(false)} className="relative z-[60]">
           <Transition.Child
@@ -265,7 +349,6 @@ export function ProjectDetailPage() {
           >
             <div className="fixed inset-0 bg-black/40" />
           </Transition.Child>
-
           <div className="fixed inset-0 flex items-center justify-center p-4">
             <Transition.Child
               as={Fragment}
@@ -307,56 +390,54 @@ export function ProjectDetailPage() {
   );
 }
 
-function LogTimeSheet({
+function BudgetLineItemSheet({
   open,
   onClose,
   projectId,
-  defaultRate,
+  lineItem,
 }: {
   open: boolean;
   onClose: () => void;
   projectId: string;
-  defaultRate?: number;
+  lineItem?: BudgetLineItem | null;
 }) {
-  const createTimeEntry = useCreateTimeEntry();
-  const [description, setDescription] = useState('');
-  const [entryDate, setEntryDate] = useState(getTodayString());
-  const [hours, setHours] = useState('');
-  const [minutes, setMinutes] = useState('');
-  const [billable, setBillable] = useState(true);
-  const [rate, setRate] = useState(defaultRate?.toString() ?? '');
-  const [notes, setNotes] = useState('');
+  const createLineItem = useCreateBudgetLineItem();
+  const updateLineItem = useUpdateBudgetLineItem();
+
+  const isEditing = !!lineItem;
+  const [category, setCategory] = useState<BudgetCategory>(
+    lineItem?.category ?? BudgetCategory.MATERIALS
+  );
+  const [description, setDescription] = useState(lineItem?.description ?? '');
+  const [estimatedAmount, setEstimatedAmount] = useState(
+    lineItem?.estimatedAmount?.toString() ?? ''
+  );
 
   const handleSubmit = async () => {
-    const durationMinutes =
-      (parseInt(hours || '0', 10) * 60) + parseInt(minutes || '0', 10);
-    if (durationMinutes <= 0) return;
+    if (!description.trim() || !estimatedAmount) return;
 
-    const data: TimeEntryRequest = {
-      projectId,
-      description: description.trim() || undefined,
-      entryDate,
-      durationMinutes,
-      billable,
-      hourlyRate: rate ? parseFloat(rate) : undefined,
-      notes: notes.trim() || undefined,
+    const data: BudgetLineItemRequest = {
+      category,
+      description: description.trim(),
+      estimatedAmount: parseFloat(estimatedAmount),
     };
 
     try {
-      await createTimeEntry.mutateAsync(data);
-      // Reset form
+      if (isEditing && lineItem) {
+        await updateLineItem.mutateAsync({ projectId, id: lineItem.id, data });
+      } else {
+        await createLineItem.mutateAsync({ projectId, data });
+      }
+      setCategory(BudgetCategory.MATERIALS);
       setDescription('');
-      setEntryDate(getTodayString());
-      setHours('');
-      setMinutes('');
-      setBillable(true);
-      setRate(defaultRate?.toString() ?? '');
-      setNotes('');
+      setEstimatedAmount('');
       onClose();
     } catch {
       // Error handled by React Query
     }
   };
+
+  const isPending = createLineItem.isPending || updateLineItem.isPending;
 
   return (
     <Transition show={open} as={Fragment}>
@@ -389,7 +470,7 @@ function LogTimeSheet({
             >
               <div className="flex items-center justify-between px-5 py-4 border-b border-gray-20 flex-shrink-0">
                 <Dialog.Title className="text-heading-02 text-gray-100">
-                  Log Time
+                  {isEditing ? 'Edit Budget Item' : 'Add Budget Item'}
                 </Dialog.Title>
                 <button
                   onClick={onClose}
@@ -400,122 +481,47 @@ function LogTimeSheet({
               </div>
 
               <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4">
-                {/* Description */}
                 <div>
                   <label className="block text-label-01 text-gray-70 mb-1">
-                    Description
+                    Category *
+                  </label>
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value as BudgetCategory)}
+                    className="w-full h-11 px-3 bg-white border border-gray-20 rounded-lg text-body-01 text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  >
+                    {BUDGET_CATEGORIES.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat.charAt(0) + cat.slice(1).toLowerCase()}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-label-01 text-gray-70 mb-1">
+                    Description *
                   </label>
                   <input
                     type="text"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="What did you work on?"
+                    placeholder="e.g., Cement and blocks"
                     className="w-full h-11 px-3 bg-white border border-gray-20 rounded-lg text-body-01 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                   />
                 </div>
 
-                {/* Date */}
                 <div>
                   <label className="block text-label-01 text-gray-70 mb-1">
-                    Date
+                    Estimated Amount (NGN) *
                   </label>
                   <input
-                    type="date"
-                    value={entryDate}
-                    onChange={(e) => setEntryDate(e.target.value)}
-                    className="w-full h-11 px-3 bg-white border border-gray-20 rounded-lg text-body-01 text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
-                </div>
-
-                {/* Duration */}
-                <div>
-                  <label className="block text-label-01 text-gray-70 mb-1">
-                    Duration *
-                  </label>
-                  <div className="flex gap-3">
-                    <div className="flex-1">
-                      <div className="relative">
-                        <input
-                          type="number"
-                          value={hours}
-                          onChange={(e) => setHours(e.target.value)}
-                          placeholder="0"
-                          min="0"
-                          className="w-full h-11 px-3 pr-8 bg-white border border-gray-20 rounded-lg text-body-01 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                        />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-helper-01 text-gray-40">
-                          hr
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <div className="relative">
-                        <input
-                          type="number"
-                          value={minutes}
-                          onChange={(e) => setMinutes(e.target.value)}
-                          placeholder="0"
-                          min="0"
-                          max="59"
-                          className="w-full h-11 px-3 pr-10 bg-white border border-gray-20 rounded-lg text-body-01 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                        />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-helper-01 text-gray-40">
-                          min
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Billable toggle */}
-                <div className="flex items-center justify-between">
-                  <label className="text-label-01 text-gray-70">Billable</label>
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={billable}
-                    onClick={() => setBillable(!billable)}
-                    className={clsx(
-                      'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                      billable ? 'bg-primary' : 'bg-gray-30'
-                    )}
-                  >
-                    <span
-                      className={clsx(
-                        'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-                        billable ? 'translate-x-6' : 'translate-x-1'
-                      )}
-                    />
-                  </button>
-                </div>
-
-                {/* Rate override */}
-                {billable && (
-                  <div>
-                    <label className="block text-label-01 text-gray-70 mb-1">
-                      Hourly Rate (NGN)
-                    </label>
-                    <input
-                      type="number"
-                      value={rate}
-                      onChange={(e) => setRate(e.target.value)}
-                      placeholder={defaultRate?.toString() || '0.00'}
-                      className="w-full h-11 px-3 bg-white border border-gray-20 rounded-lg text-body-01 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                    />
-                  </div>
-                )}
-
-                {/* Notes */}
-                <div>
-                  <label className="block text-label-01 text-gray-70 mb-1">
-                    Notes
-                  </label>
-                  <textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Additional notes"
-                    rows={2}
-                    className="w-full px-3 py-2 bg-white border border-gray-20 rounded-lg text-body-01 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+                    type="number"
+                    value={estimatedAmount}
+                    onChange={(e) => setEstimatedAmount(e.target.value)}
+                    placeholder="0"
+                    min="0"
+                    className="w-full h-11 px-3 bg-white border border-gray-20 rounded-lg text-body-01 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                   />
                 </div>
               </div>
@@ -523,13 +529,12 @@ function LogTimeSheet({
               <div className="px-5 pt-3 flex-shrink-0">
                 <button
                   onClick={handleSubmit}
-                  disabled={
-                    ((parseInt(hours || '0', 10) * 60) + parseInt(minutes || '0', 10)) <= 0 ||
-                    createTimeEntry.isPending
-                  }
+                  disabled={!description.trim() || !estimatedAmount || isPending}
                   className="w-full h-12 bg-primary text-white font-medium text-body-01 rounded-lg disabled:opacity-50"
                 >
-                  {createTimeEntry.isPending ? 'Saving...' : 'Log Time'}
+                  {isPending
+                    ? isEditing ? 'Saving...' : 'Adding...'
+                    : isEditing ? 'Save Changes' : 'Add Item'}
                 </button>
               </div>
             </Dialog.Panel>
@@ -551,7 +556,6 @@ function EditProjectSheet({
     id: string;
     name: string;
     description?: string;
-    hourlyRate?: number;
     budgetAmount?: number;
     color?: string;
     status: ProjectStatus;
@@ -560,18 +564,10 @@ function EditProjectSheet({
   const updateProject = useUpdateProject();
   const [name, setName] = useState(project.name);
   const [description, setDescription] = useState(project.description ?? '');
-  const [hourlyRate, setHourlyRate] = useState(
-    project.hourlyRate?.toString() ?? ''
-  );
   const [budgetAmount, setBudgetAmount] = useState(
     project.budgetAmount?.toString() ?? ''
   );
   const [status, setStatus] = useState<ProjectStatus>(project.status);
-
-  const PROJECT_COLORS = [
-    '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6',
-    '#EC4899', '#06B6D4', '#F97316',
-  ];
   const [selectedColor, setSelectedColor] = useState(
     project.color || PROJECT_COLORS[0]
   );
@@ -582,7 +578,6 @@ function EditProjectSheet({
     const data: ProjectRequest = {
       name: name.trim(),
       description: description.trim() || undefined,
-      hourlyRate: hourlyRate ? parseFloat(hourlyRate) : undefined,
       budgetAmount: budgetAmount ? parseFloat(budgetAmount) : undefined,
       color: selectedColor,
       status,
@@ -645,7 +640,6 @@ function EditProjectSheet({
               </div>
 
               <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4">
-                {/* Name */}
                 <div>
                   <label className="block text-label-01 text-gray-70 mb-1">
                     Project Name *
@@ -658,7 +652,6 @@ function EditProjectSheet({
                   />
                 </div>
 
-                {/* Status */}
                 <div>
                   <label className="block text-label-01 text-gray-70 mb-1">
                     Status
@@ -682,7 +675,6 @@ function EditProjectSheet({
                   </div>
                 </div>
 
-                {/* Description */}
                 <div>
                   <label className="block text-label-01 text-gray-70 mb-1">
                     Description
@@ -695,21 +687,6 @@ function EditProjectSheet({
                   />
                 </div>
 
-                {/* Hourly Rate */}
-                <div>
-                  <label className="block text-label-01 text-gray-70 mb-1">
-                    Hourly Rate (NGN)
-                  </label>
-                  <input
-                    type="number"
-                    value={hourlyRate}
-                    onChange={(e) => setHourlyRate(e.target.value)}
-                    placeholder="0.00"
-                    className="w-full h-11 px-3 bg-white border border-gray-20 rounded-lg text-body-01 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
-                </div>
-
-                {/* Budget Amount */}
                 <div>
                   <label className="block text-label-01 text-gray-70 mb-1">
                     Budget Amount (NGN)
@@ -723,7 +700,6 @@ function EditProjectSheet({
                   />
                 </div>
 
-                {/* Color */}
                 <div>
                   <label className="block text-label-01 text-gray-70 mb-2">
                     Color

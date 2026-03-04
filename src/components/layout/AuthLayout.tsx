@@ -8,7 +8,7 @@ interface AuthLayoutProps {
 
 export function AuthLayout({ title, subtitle, children }: AuthLayoutProps) {
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="h-screen overflow-y-auto flex flex-col bg-white">
       {/* Header */}
       <div className="px-6 pt-12 pb-6">
         <div className="flex items-center gap-2 mb-8">

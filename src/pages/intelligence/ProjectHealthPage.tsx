@@ -127,76 +127,45 @@ export function ProjectHealthPage() {
                     {/* Traffic light row */}
                     <div className="flex items-center gap-4 justify-center py-1">
                       <HealthDot status={project.budgetHealth} label="Budget" />
-                      <HealthDot status={project.marginHealth} label="Margin" />
-                      <HealthDot status={project.scheduleHealth} label="Schedule" />
-                      <HealthDot status={project.wipAgeHealth} label="WIP Age" />
+                      <HealthDot status={project.profitHealth} label="Profit" />
+                      <HealthDot status={project.deliveryHealth} label="Delivery" />
+                      <HealthDot status={project.paymentHealth} label="Payment" />
                     </div>
 
                     {/* Key Metrics */}
                     <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                       <div>
-                        <p className="text-helper-01 text-gray-40">Revenue</p>
+                        <p className="text-helper-01 text-gray-40">Income</p>
                         <p className="text-body-01 font-medium text-gray-100">
-                          {formatCurrency(project.revenue)}
+                          {formatCurrency(project.totalIncome)}
                         </p>
                       </div>
                       <div>
-                        <p className="text-helper-01 text-gray-40">Cost</p>
+                        <p className="text-helper-01 text-gray-40">Expenses</p>
                         <p className="text-body-01 font-medium text-gray-100">
-                          {formatCurrency(project.totalCost)}
+                          {formatCurrency(project.totalExpenses)}
                         </p>
                       </div>
                       <div>
-                        <p className="text-helper-01 text-gray-40">Margin</p>
+                        <p className="text-helper-01 text-gray-40">Profit</p>
                         <p
                           className={clsx(
                             'text-body-01 font-medium',
-                            project.grossMarginPercent != null && project.grossMarginPercent >= 30
-                              ? 'text-green-600'
-                              : project.grossMarginPercent != null && project.grossMarginPercent >= 15
-                              ? 'text-yellow-600'
-                              : 'text-red-600'
+                            project.profit >= 0 ? 'text-green-600' : 'text-red-600'
                           )}
                         >
-                          {project.grossMarginPercent != null
-                            ? `${project.grossMarginPercent.toFixed(1)}%`
+                          {formatCurrency(project.profit)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-helper-01 text-gray-40">Budget Used</p>
+                        <p className="text-body-01 font-medium text-gray-100">
+                          {project.budgetConsumedPercent != null
+                            ? `${project.budgetConsumedPercent.toFixed(0)}%`
                             : '-'}
                         </p>
                       </div>
-                      <div>
-                        <p className="text-helper-01 text-gray-40">WIP Balance</p>
-                        <p className="text-body-01 font-medium text-gray-100">
-                          {formatCurrency(project.wipBalance)}
-                        </p>
-                      </div>
                     </div>
-
-                    {/* Completion bar */}
-                    {project.percentComplete != null && (
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <p className="text-helper-01 text-gray-40">% Complete</p>
-                          <p className="text-helper-01 text-gray-50">
-                            {project.percentComplete.toFixed(0)}%
-                          </p>
-                        </div>
-                        <div className="w-full h-1.5 bg-gray-10 rounded-full overflow-hidden">
-                          <div
-                            className={clsx(
-                              'h-full rounded-full transition-all',
-                              project.percentComplete > 100
-                                ? 'bg-red-500'
-                                : project.percentComplete > 80
-                                ? 'bg-yellow-500'
-                                : 'bg-primary'
-                            )}
-                            style={{
-                              width: `${Math.min(project.percentComplete, 100)}%`,
-                            }}
-                          />
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </Card>
               ))}

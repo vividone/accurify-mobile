@@ -17,7 +17,7 @@ import { CardSkeleton } from '@/components/ui/Skeleton';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
-import { formatDuration } from '@/utils/date';
+import { formatCurrency } from '@/utils/currency';
 
 const PROJECT_COLORS = [
   '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6',
@@ -96,7 +96,7 @@ export function ProjectsPage() {
             description={
               activeFilter !== 'ALL'
                 ? `No ${activeFilter.toLowerCase()} projects.`
-                : 'Create your first project to start tracking time.'
+                : 'Create your first project to track costs, expenses and profit.'
             }
             action={
               <button
@@ -109,47 +109,44 @@ export function ProjectsPage() {
           />
         ) : (
           <div className="space-y-3">
-            {projects.map((project) => {
-              const budgetUsed =
-                project.budgetAmount && project.billableAmount
-                  ? Math.round((project.billableAmount / project.budgetAmount) * 100)
-                  : null;
-
-              return (
-                <Card
-                  key={project.id}
-                  onClick={() => navigate(`/app/projects/${project.id}`)}
-                >
-                  <div className="flex items-start gap-3">
-                    {/* Color dot */}
-                    <div
-                      className="w-3 h-3 rounded-full mt-1 flex-shrink-0"
-                      style={{ backgroundColor: project.color || '#3B82F6' }}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-body-01 font-medium text-gray-100 truncate">
-                          {project.name}
-                        </p>
-                        <StatusBadge status={project.status} />
-                      </div>
-                      {project.clientName && (
-                        <p className="text-label-01 text-gray-50 truncate mb-2">
-                          {project.clientName}
-                        </p>
+            {projects.map((project) => (
+              <Card
+                key={project.id}
+                onClick={() => navigate(`/app/projects/${project.id}`)}
+              >
+                <div className="flex items-start gap-3">
+                  {/* Color dot */}
+                  <div
+                    className="w-3 h-3 rounded-full mt-1 flex-shrink-0"
+                    style={{ backgroundColor: project.color || '#3B82F6' }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-body-01 font-medium text-gray-100 truncate">
+                        {project.name}
+                      </p>
+                      <StatusBadge status={project.status} />
+                    </div>
+                    {project.clientName && (
+                      <p className="text-label-01 text-gray-50 truncate mb-2">
+                        {project.clientName}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-4 text-helper-01 text-gray-40">
+                      {project.totalBudget > 0 && (
+                        <span>Budget {formatCurrency(project.totalBudget)}</span>
                       )}
-                      <div className="flex items-center gap-4 text-helper-01 text-gray-40">
-                        <span>{formatDuration(Math.round(project.totalHours * 60))} total</span>
-                        <span>{formatDuration(Math.round(project.billableHours * 60))} billable</span>
-                        {budgetUsed !== null && (
-                          <span>{budgetUsed}% budget</span>
-                        )}
-                      </div>
+                      {project.totalExpenses > 0 && (
+                        <span>Spent {formatCurrency(project.totalExpenses)}</span>
+                      )}
+                      {project.budgetUsedPercent != null && (
+                        <span>{project.budgetUsedPercent.toFixed(0)}% used</span>
+                      )}
                     </div>
                   </div>
-                </Card>
-              );
-            })}
+                </div>
+              </Card>
+            ))}
           </div>
         )}
       </div>
@@ -173,7 +170,6 @@ function CreateProjectSheet({
   const createProject = useCreateProject();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [hourlyRate, setHourlyRate] = useState('');
   const [budgetAmount, setBudgetAmount] = useState('');
   const [selectedColor, setSelectedColor] = useState(PROJECT_COLORS[0]);
 
@@ -183,7 +179,6 @@ function CreateProjectSheet({
     const data: ProjectRequest = {
       name: name.trim(),
       description: description.trim() || undefined,
-      hourlyRate: hourlyRate ? parseFloat(hourlyRate) : undefined,
       budgetAmount: budgetAmount ? parseFloat(budgetAmount) : undefined,
       color: selectedColor,
       status: ProjectStatus.ACTIVE,
@@ -191,10 +186,8 @@ function CreateProjectSheet({
 
     try {
       await createProject.mutateAsync(data);
-      // Reset form
       setName('');
       setDescription('');
-      setHourlyRate('');
       setBudgetAmount('');
       setSelectedColor(PROJECT_COLORS[0]);
       onClose();
@@ -245,7 +238,6 @@ function CreateProjectSheet({
               </div>
 
               <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4">
-                {/* Name */}
                 <div>
                   <label className="block text-label-01 text-gray-70 mb-1">
                     Project Name *
@@ -259,7 +251,6 @@ function CreateProjectSheet({
                   />
                 </div>
 
-                {/* Description */}
                 <div>
                   <label className="block text-label-01 text-gray-70 mb-1">
                     Description
@@ -273,21 +264,6 @@ function CreateProjectSheet({
                   />
                 </div>
 
-                {/* Hourly Rate */}
-                <div>
-                  <label className="block text-label-01 text-gray-70 mb-1">
-                    Hourly Rate (NGN)
-                  </label>
-                  <input
-                    type="number"
-                    value={hourlyRate}
-                    onChange={(e) => setHourlyRate(e.target.value)}
-                    placeholder="0.00"
-                    className="w-full h-11 px-3 bg-white border border-gray-20 rounded-lg text-body-01 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
-                </div>
-
-                {/* Budget Amount */}
                 <div>
                   <label className="block text-label-01 text-gray-70 mb-1">
                     Budget Amount (NGN)
@@ -299,9 +275,11 @@ function CreateProjectSheet({
                     placeholder="0.00"
                     className="w-full h-11 px-3 bg-white border border-gray-20 rounded-lg text-body-01 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                   />
+                  <p className="text-helper-01 text-gray-40 mt-1">
+                    Add detailed budget line items after creating the project.
+                  </p>
                 </div>
 
-                {/* Color picker */}
                 <div>
                   <label className="block text-label-01 text-gray-70 mb-2">
                     Color

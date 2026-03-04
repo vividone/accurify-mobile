@@ -101,7 +101,7 @@ function ProjectProfitabilityList({ data }: { data: ProjectProfitability[] }) {
       <EmptyState
         icon={ChartBarIcon}
         title="No profitability data"
-        description="Create projects and log time entries to see profitability metrics."
+        description="Create projects and link transactions to see profitability metrics."
       />
     );
   }
@@ -253,10 +253,6 @@ function ClientProfitabilityList({ data }: { data: ClientProfitability[] }) {
               </div>
             </div>
 
-            <div className="flex items-center gap-4 text-helper-01 text-gray-40 pt-1 border-t border-gray-10">
-              <span>{item.totalHours.toFixed(1)} total hrs</span>
-              <span>{item.billableHours.toFixed(1)} billable hrs</span>
-            </div>
           </div>
         </Card>
       ))}

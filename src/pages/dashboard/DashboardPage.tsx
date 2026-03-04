@@ -11,7 +11,7 @@ import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useQueryClient } from '@tanstack/react-query';
 import { useBusinessStore } from '@/store/business.store';
 import { BusinessType } from '@/types/enums';
-import { useProjectHealth, useRetainerHealth } from '@/queries/intelligence.queries';
+import { useProjectHealth } from '@/queries/intelligence.queries';
 import { useOnboardingStatus } from '@/queries/onboarding.queries';
 import { GoalSelectionSheet } from '@/components/onboarding/GoalSelectionSheet';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
@@ -174,7 +174,6 @@ export function DashboardPage() {
   // Service Intelligence data (only fetched for service businesses)
   const isServiceBusiness = business?.type === BusinessType.SERVICE;
   const { data: projectHealth } = useProjectHealth(isServiceBusiness);
-  const { data: retainerHealth } = useRetainerHealth(isServiceBusiness);
   const { data: wipSummary } = useWipSummary(isServiceBusiness);
 
   // Onboarding state
@@ -449,15 +448,15 @@ export function DashboardPage() {
                 <p className="text-helper-01 text-gray-30 mt-1">--</p>
               )}
             </Card>
-            <Card onClick={() => navigate('/app/utilization')}>
+            <Card onClick={() => navigate('/app/profitability')}>
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center">
                   <UsersIcon className="w-4 h-4 text-blue-600" />
                 </div>
                 <ChevronRightIcon className="w-4 h-4 text-gray-30 ml-auto" />
               </div>
-              <p className="text-label-01 text-gray-50">Utilization</p>
-              <p className="text-heading-03 tabular-nums text-gray-100 mt-1">--</p>
+              <p className="text-label-01 text-gray-50">Profitability</p>
+              <p className="text-heading-03 tabular-nums text-gray-100 mt-1">View →</p>
             </Card>
             <Card onClick={() => navigate('/app/wip')}>
               <div className="flex items-center gap-2 mb-2">
@@ -471,17 +470,15 @@ export function DashboardPage() {
                 {wipSummary ? formatCurrency(wipSummary.totalWipBalance) : '--'}
               </p>
             </Card>
-            <Card onClick={() => navigate('/app/retainer-health')}>
+            <Card onClick={() => navigate('/app/milestones')}>
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-7 h-7 bg-orange-50 rounded-lg flex items-center justify-center">
                   <ArrowPathRoundedSquareIcon className="w-4 h-4 text-orange-600" />
                 </div>
                 <ChevronRightIcon className="w-4 h-4 text-gray-30 ml-auto" />
               </div>
-              <p className="text-label-01 text-gray-50">MRR</p>
-              <p className="text-heading-03 tabular-nums text-gray-100 mt-1">
-                {retainerHealth ? formatCurrency(retainerHealth.totalMRR) : '--'}
-              </p>
+              <p className="text-label-01 text-gray-50">Milestones</p>
+              <p className="text-heading-03 tabular-nums text-gray-100 mt-1">View →</p>
             </Card>
           </div>
         </div>

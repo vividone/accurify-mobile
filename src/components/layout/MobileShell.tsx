@@ -16,7 +16,11 @@ export function MobileShell() {
       <InstallBanner />
       <main
         className="flex-1 overflow-y-auto bg-gray-10"
-        style={{ paddingBottom: 'calc(var(--bottom-bar-height) + var(--safe-area-bottom) + 1rem)' }}
+        style={{
+          paddingBottom: 'calc(var(--bottom-bar-height) + var(--safe-area-bottom) + 1rem)',
+          overscrollBehavior: 'contain',
+          WebkitOverflowScrolling: 'touch',
+        }}
       >
         <Outlet />
       </main>

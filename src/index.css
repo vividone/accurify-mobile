@@ -53,7 +53,7 @@
     --safe-area-bottom: env(safe-area-inset-bottom, 0px);
     --safe-area-left: env(safe-area-inset-left, 0px);
     --safe-area-right: env(safe-area-inset-right, 0px);
-    --header-height: 3.5rem;
+    --header-height: calc(3.5rem + var(--safe-area-top));
     --bottom-bar-height: 4rem;
   }
 }
