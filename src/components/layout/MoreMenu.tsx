@@ -17,7 +17,6 @@ import {
   ReceiptPercentIcon,
   CreditCardIcon,
   SparklesIcon,
-  ClockIcon,
   XMarkIcon,
   FolderIcon,
   ArrowPathIcon,
@@ -62,11 +61,10 @@ export function MoreMenu() {
       { label: 'Clients', icon: UserGroupIcon, onClick: () => go('/app/clients') },
       { label: 'Transactions', icon: BanknotesIcon, onClick: () => go('/app/transactions') },
     ];
-    // Projects & Time Tracking — SERVICE businesses only
+    // Projects — SERVICE businesses only
     if (isServiceBusiness) {
       recordItems.push(
         { label: 'Projects', icon: FolderIcon, onClick: () => go('/app/projects') },
-        { label: 'Time Tracking', icon: ClockIcon, onClick: () => go('/app/time-entries') },
       );
     }
     result.push({ title: 'Records', items: recordItems });

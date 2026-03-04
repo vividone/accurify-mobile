@@ -28,11 +28,12 @@ import { formatCurrency } from '@/utils/currency';
 import { formatDate } from '@/utils/date';
 
 // ===== Status helpers =====
-function statusVariant(status: string): 'gray' | 'info' | 'success' {
-  const map: Record<string, 'gray' | 'info' | 'success'> = {
-    PENDING: 'gray',
-    INVOICED: 'info',
-    PAID: 'success',
+function statusVariant(status: string): 'gray' | 'info' | 'success' | 'danger' {
+  const map: Record<string, 'gray' | 'info' | 'success' | 'danger'> = {
+    NOT_STARTED: 'gray',
+    IN_PROGRESS: 'info',
+    COMPLETED: 'success',
+    OVERDUE: 'danger',
   };
   return map[status] || 'gray';
 }
@@ -103,11 +104,13 @@ function MilestoneCard({
           </div>
 
           {/* Amount */}
-          <div>
-            <p className="text-body-01 font-medium text-gray-100">
-              {formatCurrency(milestone.amount)}
-            </p>
-          </div>
+          {milestone.amount != null && (
+            <div>
+              <p className="text-body-01 font-medium text-gray-100">
+                {formatCurrency(milestone.amount)}
+              </p>
+            </div>
+          )}
 
           {/* Percentage progress bar */}
           {milestone.percentage != null && milestone.percentage > 0 && (
@@ -244,12 +247,12 @@ function MilestoneFormSheet({
   };
 
   const handleSubmit = async () => {
-    if (!name.trim() || !amount) return;
+    if (!name.trim()) return;
 
     const data: MilestoneRequest = {
       name: name.trim(),
       description: description.trim() || undefined,
-      amount: parseFloat(amount),
+      amount: amount ? parseFloat(amount) : undefined,
       percentage: percentage ? parseFloat(percentage) : undefined,
       dueDate: dueDate || undefined,
     };
@@ -391,7 +394,7 @@ function MilestoneFormSheet({
               <div className="px-5 pt-3 flex-shrink-0">
                 <button
                   onClick={handleSubmit}
-                  disabled={!name.trim() || !amount || isPending}
+                  disabled={!name.trim() || isPending}
                   className="w-full h-12 bg-primary text-white font-medium text-body-01 rounded-lg disabled:opacity-50"
                 >
                   {isPending
