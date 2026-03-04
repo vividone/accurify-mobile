@@ -27,3 +27,4 @@ export * from './milestones.queries';
 export * from './intelligence.queries';
 export * from './reconciliation.queries';
 export * from './onboarding.queries';
+export * from './service-items.queries';

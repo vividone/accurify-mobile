@@ -28,3 +28,4 @@ export { milestonesApi } from './milestones.api';
 export { intelligenceApi } from './intelligence.api';
 export { reconciliationApi } from './reconciliation.api';
 export { onboardingApi } from './onboarding.api';
+export { serviceItemsApi } from './service-items.api';
