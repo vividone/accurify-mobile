@@ -2,7 +2,9 @@ export type OnboardingGoal =
   | 'SEND_INVOICES'
   | 'TRACK_EXPENSES'
   | 'MANAGE_TAXES'
-  | 'FULL_ACCOUNTING';
+  | 'FULL_ACCOUNTING'
+  | 'SELL_ONLINE'
+  | 'MANAGE_PROJECTS';
 
 export interface NextBestAction {
   title: string;

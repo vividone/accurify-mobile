@@ -1,12 +1,20 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useProducts, useCreateOrder } from '@/queries';
+import {
+  useProducts,
+  useCreateOrder,
+  useUpdateOrderPayment,
+  useConfirmOrder,
+  useMarkOrderProcessing,
+  useMarkOrderReady,
+  useCompleteOrder,
+} from '@/queries';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 import { formatCurrency, formatNumber } from '@/utils/currency';
 import { useUIStore } from '@/store/ui.store';
-import { OrderSource } from '@/types/store.types';
+import { OrderSource, OrderPaymentStatus } from '@/types/store.types';
 import type { Product } from '@/types/product.types';
 import {
   MagnifyingGlassIcon,
@@ -27,11 +35,17 @@ export function POSPage() {
   const showNotification = useUIStore((s) => s.showNotification);
   const { data: productsData, isLoading } = useProducts(0, 200, { active: true });
   const createOrder = useCreateOrder();
+  const updatePayment = useUpdateOrderPayment();
+  const confirmOrder = useConfirmOrder();
+  const markProcessing = useMarkOrderProcessing();
+  const markReady = useMarkOrderReady();
+  const completeOrder = useCompleteOrder();
   const [search, setSearch] = useState('');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [showCheckout, setShowCheckout] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('CASH');
 
   const products = useMemo(() => {
     const all = productsData?.content ?? [];
@@ -91,9 +105,13 @@ export function POSPage() {
   }, 0);
   const estimatedProfit = totalCogs > 0 ? subtotal - totalCogs : null;
 
+  const isProcessing =
+    createOrder.isPending || updatePayment.isPending || confirmOrder.isPending ||
+    markProcessing.isPending || markReady.isPending || completeOrder.isPending;
+
   const handleCheckout = async () => {
     try {
-      await createOrder.mutateAsync({
+      const result = await createOrder.mutateAsync({
         source: OrderSource.POS,
         customerName: customerName || undefined,
         customerPhone: customerPhone || undefined,
@@ -103,12 +121,36 @@ export function POSPage() {
           unitPrice: item.product.unitPrice,
         })),
       });
-      showNotification('Success', 'Order created successfully', 'success');
+      const orderId = result.data!.id;
+
+      // Record payment immediately for POS sales
+      try {
+        await updatePayment.mutateAsync({
+          orderId,
+          status: OrderPaymentStatus.PAID,
+          method: paymentMethod,
+        });
+      } catch (payErr) {
+        console.error('Failed to record payment:', payErr);
+      }
+
+      // Auto-complete POS order: PENDING → CONFIRMED → PROCESSING → READY → COMPLETED
+      try {
+        await confirmOrder.mutateAsync(orderId);
+        await markProcessing.mutateAsync(orderId);
+        await markReady.mutateAsync(orderId);
+        await completeOrder.mutateAsync(orderId);
+      } catch (statusErr) {
+        console.error('Failed to auto-complete order:', statusErr);
+      }
+
+      showNotification('Success', 'Sale completed successfully', 'success');
       setCart([]);
       setCustomerName('');
       setCustomerPhone('');
+      setPaymentMethod('CASH');
       setShowCheckout(false);
-      navigate('/app/orders');
+      navigate(`/app/orders/${orderId}`);
     } catch {
       showNotification('Error', 'Failed to create order', 'error');
     }
@@ -261,8 +303,33 @@ export function POSPage() {
                 </div>
               ))}
 
-              {/* Customer info (optional) */}
+              {/* Payment method */}
               <div className="pt-2 space-y-3">
+                <p className="text-label-01 text-gray-70">Payment Method</p>
+                <div className="flex gap-2">
+                  {([
+                    { value: 'CASH', label: 'Cash' },
+                    { value: 'BANK_TRANSFER', label: 'Transfer' },
+                    { value: 'CARD', label: 'Card' },
+                  ] as const).map((method) => (
+                    <button
+                      key={method.value}
+                      type="button"
+                      onClick={() => setPaymentMethod(method.value)}
+                      className={`flex-1 h-10 rounded-lg text-body-01 font-medium border-2 transition-colors ${
+                        paymentMethod === method.value
+                          ? 'border-primary bg-primary-50 text-primary'
+                          : 'border-gray-20 bg-white text-gray-70 active:bg-gray-10'
+                      }`}
+                    >
+                      {method.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Customer info (optional) */}
+              <div className="space-y-3">
                 <p className="text-label-01 text-gray-70">Customer (optional)</p>
                 <input
                   type="text"
@@ -307,10 +374,10 @@ export function POSPage() {
               )}
               <button
                 onClick={handleCheckout}
-                disabled={cart.length === 0 || createOrder.isPending}
+                disabled={cart.length === 0 || isProcessing}
                 className="w-full h-12 bg-primary text-white font-medium text-body-01 rounded-lg disabled:opacity-50 mt-2"
               >
-                {createOrder.isPending ? 'Processing...' : `Complete Sale — ${formatCurrency(total)}`}
+                {isProcessing ? 'Processing...' : `Complete Sale — ${formatCurrency(total)}`}
               </button>
             </div>
           </div>
