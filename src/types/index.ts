@@ -28,3 +28,4 @@ export * from './wip.types';
 export * from './intelligence.types';
 export * from './reconciliation.types';
 export * from './onboarding.types';
+export * from './service-item.types';

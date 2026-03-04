@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, Transition } from '@headlessui/react';
 import { XMarkIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
@@ -8,6 +8,8 @@ import { useUIStore } from '@/store/ui.store';
 import { useQueryClient } from '@tanstack/react-query';
 import { useBusinessStore } from '@/store/business.store';
 import { markFastPathCompleted } from '@/utils/fast-path.utils';
+import { useServiceItems } from '@/queries';
+import { BusinessType } from '@/types/enums';
 import type { InvoiceType } from '@/types/enums';
 
 const TOTAL_STEPS = 3;
@@ -33,6 +35,11 @@ export function InvoiceFastPathWizard({ open, onClose }: InvoiceFastPathWizardPr
   const queryClient = useQueryClient();
   const showNotification = useUIStore((s) => s.showNotification);
   const business = useBusinessStore((s) => s.business);
+  const isServiceBusiness = business?.type === BusinessType.SERVICE;
+
+  // Load service items for SERVICE businesses
+  const { data: serviceItemsData } = useServiceItems(0, 200, { active: true });
+  const serviceItems = useMemo(() => serviceItemsData?.content ?? [], [serviceItemsData?.content]);
 
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -120,8 +127,6 @@ export function InvoiceFastPathWizard({ open, onClose }: InvoiceFastPathWizardPr
       const today = new Date().toISOString().split('T')[0];
       const dueDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-      const unitPriceKobo = Math.round(priceNum * 100);
-
       const invoice = await invoicesApi.create({
         clientId: createdClientId || undefined,
         clientName: clientData.name.trim(),
@@ -132,7 +137,7 @@ export function InvoiceFastPathWizard({ open, onClose }: InvoiceFastPathWizardPr
           {
             description: invoiceData.description.trim(),
             quantity: 1,
-            unitPrice: unitPriceKobo,
+            unitPrice: priceNum, // Backend expects naira, converts to kobo internally
           },
         ],
         applyVat: invoiceData.applyVat,
@@ -310,6 +315,33 @@ export function InvoiceFastPathWizard({ open, onClose }: InvoiceFastPathWizardPr
                 {/* STEP 1: Invoice details */}
                 {!showSuccess && currentStep === 1 && (
                   <>
+                    {isServiceBusiness && serviceItems.length > 0 && (
+                      <div>
+                        <label className={labelClass}>Quick pick a service</label>
+                        <div className="flex flex-wrap gap-2">
+                          {serviceItems.map((svc) => (
+                            <button
+                              key={svc.id}
+                              type="button"
+                              onClick={() => {
+                                setInvoiceData((d) => ({
+                                  ...d,
+                                  description: svc.name,
+                                  price: String(svc.defaultPrice),
+                                }));
+                              }}
+                              className={`px-3 py-1.5 rounded-full text-label-01 border transition-colors ${
+                                invoiceData.description === svc.name
+                                  ? 'bg-primary text-white border-primary'
+                                  : 'bg-white text-gray-70 border-gray-30 active:bg-gray-10'
+                              }`}
+                            >
+                              {svc.name}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     <div>
                       <label className={labelClass}>
                         Description <span className="text-danger">*</span>
