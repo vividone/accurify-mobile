@@ -120,8 +120,6 @@ export function InvoiceFastPathWizard({ open, onClose }: InvoiceFastPathWizardPr
       const today = new Date().toISOString().split('T')[0];
       const dueDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-      const unitPriceKobo = Math.round(priceNum * 100);
-
       const invoice = await invoicesApi.create({
         clientId: createdClientId || undefined,
         clientName: clientData.name.trim(),
@@ -132,7 +130,7 @@ export function InvoiceFastPathWizard({ open, onClose }: InvoiceFastPathWizardPr
           {
             description: invoiceData.description.trim(),
             quantity: 1,
-            unitPrice: unitPriceKobo,
+            unitPrice: priceNum, // Backend expects naira, converts to kobo internally
           },
         ],
         applyVat: invoiceData.applyVat,
