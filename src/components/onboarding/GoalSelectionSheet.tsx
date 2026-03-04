@@ -61,8 +61,22 @@ export function GoalSelectionSheet({ open, onClose, onGoalSelected }: GoalSelect
     try {
       await setGoal.mutateAsync(selected);
       onGoalSelected(selected);
-    } catch {
-      showNotification('Error', 'Failed to save your goal. Please try again.', 'error');
+    } catch (err: unknown) {
+      console.error('Failed to save goal:', err);
+      let message = 'Failed to save your goal. Please try again.';
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosErr = err as { response?: { status?: number; data?: { message?: string } } };
+        const status = axiosErr.response?.status;
+        const apiMsg = axiosErr.response?.data?.message;
+        if (status === 403) {
+          message = 'You do not have permission to set a goal. Only account owners can do this.';
+        } else if (status === 401) {
+          message = 'Your session has expired. Please log in again.';
+        } else if (apiMsg) {
+          message = apiMsg;
+        }
+      }
+      showNotification('Error', message, 'error');
     }
   };
 
