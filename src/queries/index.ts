@@ -28,3 +28,6 @@ export * from './intelligence.queries';
 export * from './reconciliation.queries';
 export * from './onboarding.queries';
 export * from './service-items.queries';
+export * from './credit-notes.queries';
+export * from './fiscal-periods.queries';
+export * from './recurring.queries';

@@ -324,6 +324,37 @@ export enum UserRole {
   ACCOUNTANT = 'ACCOUNTANT',
 }
 
+// Credit note status
+export enum CreditNoteStatus {
+  DRAFT = 'DRAFT',
+  ISSUED = 'ISSUED',
+  APPLIED = 'APPLIED',
+  VOIDED = 'VOIDED',
+}
+
+// Fiscal period status
+export enum FiscalPeriodStatus {
+  OPEN = 'OPEN',
+  CLOSED = 'CLOSED',
+  LOCKED = 'LOCKED',
+}
+
+// Recurrence frequency
+export enum RecurrenceFrequency {
+  WEEKLY = 'WEEKLY',
+  MONTHLY = 'MONTHLY',
+  QUARTERLY = 'QUARTERLY',
+  ANNUALLY = 'ANNUALLY',
+}
+
+// Recurring template status
+export enum RecurringTemplateStatus {
+  ACTIVE = 'ACTIVE',
+  PAUSED = 'PAUSED',
+  EXPIRED = 'EXPIRED',
+  COMPLETED = 'COMPLETED',
+}
+
 // Helper functions
 export function getInflowCategories(): TransactionCategory[] {
   return Object.entries(CATEGORY_META)

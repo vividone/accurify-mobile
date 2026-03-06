@@ -22,6 +22,8 @@ import {
   ArrowPathIcon,
   ChartBarIcon,
   ArrowTrendingUpIcon,
+  DocumentMinusIcon,
+  LockClosedIcon,
 } from '@heroicons/react/24/outline';
 import { useUIStore } from '@/store/ui.store';
 import { useAuthStore } from '@/store/auth.store';
@@ -60,6 +62,8 @@ export function MoreMenu() {
     const recordItems: MenuItem[] = [
       { label: 'Clients', icon: UserGroupIcon, onClick: () => go('/app/clients') },
       { label: 'Transactions', icon: BanknotesIcon, onClick: () => go('/app/transactions') },
+      { label: 'Credit Notes', icon: DocumentMinusIcon, onClick: () => go('/app/credit-notes') },
+      { label: 'Recurring', icon: ArrowPathIcon, onClick: () => go('/app/recurring') },
     ];
     // Projects — SERVICE businesses only
     if (isServiceBusiness) {
@@ -79,6 +83,7 @@ export function MoreMenu() {
         { label: 'Fixed Assets', icon: CubeIcon, onClick: () => go('/app/assets') },
         { label: 'Cash Flow Forecast', icon: ChartBarIcon, onClick: () => go('/app/reports/cash-flow-forecast') },
         { label: 'Margin Trend', icon: ArrowTrendingUpIcon, onClick: () => go('/app/reports/margin-trend') },
+        { label: 'Period Closing', icon: LockClosedIcon, onClick: () => go('/app/fiscal-periods') },
       ],
     });
 
