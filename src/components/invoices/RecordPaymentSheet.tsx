@@ -17,8 +17,8 @@ interface RecordPaymentSheetProps {
 }
 
 const schema = z.object({
-  amountKobo: z.number().min(1, 'Amount must be greater than 0'),
-  whtAmountKobo: z.number().min(0).optional(),
+  amountNaira: z.number().min(1, 'Amount must be greater than 0'),
+  whtAmountNaira: z.number().min(0).optional(),
   paymentDate: z.string().min(1, 'Payment date is required'),
   paymentMethod: z.string().optional(),
   reference: z.string().optional(),
@@ -55,8 +55,8 @@ export function RecordPaymentSheet({
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      amountKobo: 0,
-      whtAmountKobo: 0,
+      amountNaira: 0,
+      whtAmountNaira: 0,
       paymentDate: new Date().toISOString().split('T')[0],
       paymentMethod: '',
       reference: '',
@@ -64,17 +64,17 @@ export function RecordPaymentSheet({
     },
   });
 
-  const amountKobo = watch('amountKobo') || 0;
-  const whtKobo = watch('whtAmountKobo') || 0;
-  const totalApplied = amountKobo + whtKobo;
+  const amountNaira = watch('amountNaira') || 0;
+  const whtNaira = watch('whtAmountNaira') || 0;
+  const totalApplied = amountNaira + whtNaira;
   const exceedsBalance = totalApplied > balanceDue;
 
   const onSubmit = async (values: FormValues) => {
     if (exceedsBalance) return;
     try {
       await recordPayment.mutateAsync({
-        amountKobo: values.amountKobo,
-        whtAmountKobo: values.whtAmountKobo || 0,
+        amountKobo: Math.round(values.amountNaira * 100),
+        whtAmountKobo: Math.round((values.whtAmountNaira || 0) * 100),
         paymentDate: values.paymentDate,
         paymentMethod: values.paymentMethod || undefined,
         reference: values.reference || undefined,
@@ -160,11 +160,11 @@ export function RecordPaymentSheet({
                     min="0"
                     step="0.01"
                     placeholder="0.00"
-                    {...register('amountKobo', { valueAsNumber: true })}
+                    {...register('amountNaira', { valueAsNumber: true })}
                     className="w-full h-11 px-3 border border-gray-30 rounded-lg text-body-01 text-gray-100 focus:outline-none focus:border-primary"
                   />
-                  {errors.amountKobo && (
-                    <p className="text-helper-01 text-danger mt-1">{errors.amountKobo.message}</p>
+                  {errors.amountNaira && (
+                    <p className="text-helper-01 text-danger mt-1">{errors.amountNaira.message}</p>
                   )}
                 </div>
 
@@ -178,7 +178,7 @@ export function RecordPaymentSheet({
                     min="0"
                     step="0.01"
                     placeholder="0.00"
-                    {...register('whtAmountKobo', { valueAsNumber: true })}
+                    {...register('whtAmountNaira', { valueAsNumber: true })}
                     className="w-full h-11 px-3 border border-gray-30 rounded-lg text-body-01 text-gray-100 focus:outline-none focus:border-primary"
                   />
                   <p className="text-helper-01 text-gray-40 mt-1">
@@ -187,7 +187,7 @@ export function RecordPaymentSheet({
                 </div>
 
                 {/* Total applied */}
-                {(amountKobo > 0 || whtKobo > 0) && (
+                {(amountNaira > 0 || whtNaira > 0) && (
                   <div className={`rounded-lg px-3 py-2.5 ${exceedsBalance ? 'bg-red-50' : 'bg-green-50'}`}>
                     <div className="flex justify-between text-body-01">
                       <span className={exceedsBalance ? 'text-danger' : 'text-success'}>Total Applied</span>

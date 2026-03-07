@@ -1,15 +1,28 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCreateRecurring } from '@/queries';
+import { useCreateRecurring, useClients } from '@/queries';
 import { useUIStore } from '@/store/ui.store';
 import { RecurrenceFrequency } from '@/types';
 import type { RecurringTemplateRequest } from '@/types';
 import { ArrowLeftIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+import clsx from 'clsx';
+
+const DEFAULT_VAT_RATE = 0.075;
+const WHT_RATES = [
+  { value: 0.05, label: '5% — Contracts, Supplies' },
+  { value: 0.10, label: '10% — Professional Services' },
+];
 
 export function RecurringCreatePage() {
   const navigate = useNavigate();
   const showNotification = useUIStore((s) => s.showNotification);
   const createMutation = useCreateRecurring();
+  const { data: clientsData } = useClients(0, 100);
+  const clients = clientsData?.content ?? [];
+
+  const [applyVat, setApplyVat] = useState(false);
+  const [whtApplicable, setWhtApplicable] = useState(false);
+  const [whtRate, setWhtRate] = useState(0.05);
 
   const [form, setForm] = useState<RecurringTemplateRequest>({
     templateName: '',
@@ -45,7 +58,13 @@ export function RecurringCreatePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await createMutation.mutateAsync(form);
+      await createMutation.mutateAsync({
+        ...form,
+        vatApplicable: applyVat,
+        vatRate: applyVat ? DEFAULT_VAT_RATE : undefined,
+        whtApplicable,
+        whtRate: whtApplicable ? whtRate : undefined,
+      });
       showNotification('Template created', '', 'success');
       navigate('/app/recurring');
     } catch (err: unknown) {
@@ -80,6 +99,22 @@ export function RecurringCreatePage() {
               required
               className="w-full h-10 px-3 bg-white border border-gray-20 rounded-lg text-body-01 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-2 focus:ring-primary"
             />
+          </div>
+
+          <div>
+            <label className="text-label-01 text-gray-50 mb-1 block">Client</label>
+            <select
+              value={form.clientId || ''}
+              onChange={(e) => setForm((p) => ({ ...p, clientId: e.target.value || undefined }))}
+              className="w-full h-10 px-3 bg-white border border-gray-20 rounded-lg text-body-01 text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              <option value="">Select a client</option>
+              {clients.map((client) => (
+                <option key={client.id} value={client.id}>
+                  {client.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -188,6 +223,88 @@ export function RecurringCreatePage() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Tax settings */}
+        <div className="bg-white rounded-xl p-4 border border-gray-20 space-y-3">
+          <span className="text-label-01 font-medium text-gray-100">Tax Settings</span>
+
+          {/* VAT toggle */}
+          <div className="flex items-center justify-between py-2">
+            <div>
+              <p className="text-body-01 text-gray-100">Apply VAT</p>
+              <p className="text-helper-01 text-gray-40">7.5% Nigerian VAT rate</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setApplyVat(!applyVat)}
+              className={clsx(
+                'relative w-11 h-6 rounded-full transition-colors',
+                applyVat ? 'bg-primary' : 'bg-gray-30'
+              )}
+            >
+              <span
+                className={clsx(
+                  'absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform',
+                  applyVat && 'translate-x-5'
+                )}
+              />
+            </button>
+          </div>
+
+          <div className="border-t border-gray-10" />
+
+          {/* WHT toggle */}
+          <div className="flex items-center justify-between py-2">
+            <div>
+              <p className="text-body-01 text-gray-100">WHT Applicable</p>
+              <p className="text-helper-01 text-gray-40">Withheld by client on payment</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setWhtApplicable(!whtApplicable)}
+              className={clsx(
+                'relative w-11 h-6 rounded-full transition-colors',
+                whtApplicable ? 'bg-primary' : 'bg-gray-30'
+              )}
+            >
+              <span
+                className={clsx(
+                  'absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform',
+                  whtApplicable && 'translate-x-5'
+                )}
+              />
+            </button>
+          </div>
+
+          {whtApplicable && (
+            <div>
+              <label className="block text-helper-01 text-gray-50 mb-1.5">WHT Rate</label>
+              <select
+                value={whtRate}
+                onChange={(e) => setWhtRate(Number(e.target.value))}
+                className="w-full h-10 px-3 bg-white border border-gray-20 rounded-lg text-body-01 text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                {WHT_RATES.map((rate) => (
+                  <option key={rate.value} value={rate.value}>
+                    {rate.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+
+        {/* Notes */}
+        <div className="bg-white rounded-xl p-4 border border-gray-20">
+          <label className="text-label-01 text-gray-50 mb-1 block">Notes (optional)</label>
+          <textarea
+            rows={2}
+            value={form.notes || ''}
+            onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value || undefined }))}
+            placeholder="Additional notes..."
+            className="w-full px-3 py-2 bg-white border border-gray-20 rounded-lg text-body-01 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+          />
         </div>
 
         {/* Submit */}

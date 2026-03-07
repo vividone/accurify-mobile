@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useCreateInvoice, useSendInvoice, useClients, useProducts } from '@/queries';
+import { useCreateInvoice, useSendInvoice, useClients, useProducts, useProjects } from '@/queries';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card } from '@/components/ui/Card';
 import { formatCurrency } from '@/utils/currency';
@@ -11,6 +11,7 @@ import { getTodayString, getDefaultDueDate } from '@/utils/date';
 import { useUIStore } from '@/store/ui.store';
 import { useBusinessStore } from '@/store/business.store';
 import { InvoiceType, BusinessType } from '@/types/enums';
+import { ProjectStatus } from '@/types/project.types';
 import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 
@@ -47,6 +48,9 @@ export function InvoiceCreatePage() {
   const isGoodsBusiness = business?.type === BusinessType.GOODS;
   const { data: productsData } = useProducts(0, 200, { active: true });
   const products = productsData?.content ?? [];
+  const { data: projectsData } = useProjects(0, 100, ProjectStatus.ACTIVE);
+  const projects = projectsData?.content ?? [];
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [invoiceType, setInvoiceType] = useState<InvoiceType>(InvoiceType.STANDARD);
   const isProforma = invoiceType === InvoiceType.PROFORMA;
@@ -102,6 +106,7 @@ export function InvoiceCreatePage() {
         vatRate: applyVat ? DEFAULT_VAT_RATE : undefined,
         whtApplicable,
         whtRate: whtApplicable ? whtRate : undefined,
+        projectId: selectedProjectId || undefined,
       });
 
       if (shouldSend && invoice?.id) {
@@ -219,6 +224,30 @@ export function InvoiceCreatePage() {
               </div>
             </div>
           </Card>
+
+          {/* Project (optional) */}
+          {projects.length > 0 && (
+            <Card>
+              <label className="block text-label-01 text-gray-70 mb-1.5">
+                Project (optional)
+              </label>
+              <select
+                className="w-full h-12 px-4 bg-gray-10 border border-gray-30 text-body-01 text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary"
+                value={selectedProjectId || ''}
+                onChange={(e) => setSelectedProjectId(e.target.value || null)}
+              >
+                <option value="">No project</option>
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-helper-01 text-gray-40">
+                Link this invoice to a project for revenue tracking
+              </p>
+            </Card>
+          )}
 
           {/* Line items */}
           <Card>
