@@ -3,9 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeftIcon,
   PaperAirplaneIcon,
+  ArrowPathIcon,
+  ChevronDownIcon,
 } from '@heroicons/react/24/outline';
 import { SparklesIcon } from '@heroicons/react/24/solid';
 import { useChatSessionMessages, useSendChatMessage } from '@/queries/chat.queries';
+import { useUIStore } from '@/store/ui.store';
 import type { ChatMessage, ChatMessageRequest } from '@/types';
 
 // ==================== Constants ====================
@@ -22,6 +25,31 @@ const INITIAL_SUGGESTIONS = [
   'Record an expense',
   'Help',
 ];
+
+// ==================== Inline Styles ====================
+
+const ANIMATION_STYLES = `
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes dotPulse {
+  0%, 100% { transform: scale(1); opacity: 0.4; }
+  50% { transform: scale(1.4); opacity: 1; }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+`;
 
 // ==================== Helpers ====================
 
@@ -76,6 +104,27 @@ function formatMessageTime(timestamp: string): string {
   }
 }
 
+function isSameDay(a: Date, b: Date): boolean {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
+function getDateLabel(date: Date): string {
+  const today = new Date();
+  if (isSameDay(date, today)) return 'Today';
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  if (isSameDay(date, yesterday)) return 'Yesterday';
+  return date.toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
 function getSessionId(): string | null {
   return localStorage.getItem(SESSION_KEY);
 }
@@ -84,10 +133,15 @@ function saveSessionId(id: string): void {
   localStorage.setItem(SESSION_KEY, id);
 }
 
+function clearSessionId(): void {
+  localStorage.removeItem(SESSION_KEY);
+}
+
 // ==================== Component ====================
 
 export function ChatPage() {
   const navigate = useNavigate();
+  const showNotification = useUIStore((s) => s.showNotification);
 
   // Session state
   const [sessionId, setSessionId] = useState<string | null>(() => getSessionId());
@@ -96,16 +150,29 @@ export function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(null);
   const [historyLoaded, setHistoryLoaded] = useState(false);
+
+  // Scroll-to-bottom state
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
+  const [newMsgCount, setNewMsgCount] = useState(0);
 
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // React Query
   const { data: historyMessages, isLoading: historyLoading } =
     useChatSessionMessages(sessionId);
   const sendMessageMutation = useSendChatMessage();
+
+  // Determine if user is near bottom of the scroll container
+  const isNearBottom = useCallback((): boolean => {
+    const el = messagesContainerRef.current;
+    if (!el) return true;
+    return el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+  }, []);
 
   // Load history on mount if session exists
   useEffect(() => {
@@ -133,10 +200,15 @@ export function ChatPage() {
     }
   }, [sessionId, messages.length]);
 
-  // Auto-scroll
+  // Auto-scroll (only if near bottom)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, sendMessageMutation.isPending]);
+    if (isNearBottom()) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      // User is scrolled up — increment unread count
+      setNewMsgCount((c) => c + 1);
+    }
+  }, [messages, sendMessageMutation.isPending, isNearBottom]);
 
   // Focus input on mount
   useEffect(() => {
@@ -154,6 +226,47 @@ export function ChatPage() {
     };
   }
 
+  // Scroll handler for messages container
+  const handleScroll = useCallback(() => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+    setShowScrollBtn(!nearBottom);
+    if (nearBottom) setNewMsgCount(0);
+  }, []);
+
+  // Scroll to bottom
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    setShowScrollBtn(false);
+    setNewMsgCount(0);
+  }, []);
+
+  // New chat handler
+  const handleNewChat = useCallback(() => {
+    clearSessionId();
+    setSessionId(null);
+    setMessages([createGreeting()]);
+    setError(null);
+    setLastFailedMessage(null);
+    setHistoryLoaded(false);
+    setInputValue('');
+  }, []);
+
+  // Copy bot message to clipboard
+  const handleCopyMessage = useCallback(
+    async (text: string) => {
+      try {
+        await navigator.clipboard.writeText(text);
+        showNotification('Copied', 'Message copied to clipboard', 'success');
+      } catch {
+        // Fallback for browsers without clipboard API
+        showNotification('Error', 'Could not copy message', 'error');
+      }
+    },
+    [showNotification]
+  );
+
   // Send message
   const handleSend = useCallback(
     async (messageText?: string) => {
@@ -161,6 +274,7 @@ export function ChatPage() {
       if (!text || sendMessageMutation.isPending) return;
 
       setError(null);
+      setLastFailedMessage(null);
       setInputValue('');
 
       // Optimistic: add user message immediately
@@ -199,16 +313,33 @@ export function ChatPage() {
         };
         setMessages((prev) => [...prev, botMessage]);
       } catch (err: unknown) {
+        setLastFailedMessage(text);
         const axiosError = err as { response?: { status?: number } };
         if (axiosError.response?.status === 429) {
           setError('You are sending messages too quickly. Please wait a moment.');
         } else {
-          setError('Failed to send message. Please try again.');
+          setError('Failed to send message. Tap to retry.');
         }
       }
     },
     [inputValue, sendMessageMutation, sessionId]
   );
+
+  // Retry failed message
+  const handleRetry = useCallback(() => {
+    if (!lastFailedMessage) return;
+    // Remove the failed user message bubble
+    setMessages((prev) => {
+      const lastUserIdx = [...prev].reverse().findIndex((m) => m.senderType === 'USER');
+      if (lastUserIdx === -1) return prev;
+      const idx = prev.length - 1 - lastUserIdx;
+      return [...prev.slice(0, idx), ...prev.slice(idx + 1)];
+    });
+    setError(null);
+    const msg = lastFailedMessage;
+    setLastFailedMessage(null);
+    handleSend(msg);
+  }, [lastFailedMessage, handleSend]);
 
   const handleSuggestionClick = useCallback(
     (suggestion: string) => handleSend(suggestion),
@@ -225,7 +356,35 @@ export function ChatPage() {
     [handleSend]
   );
 
+  // Determine if message is the initial greeting
+  const isGreetingMessage = (msg: ChatMessage): boolean =>
+    msg.senderType === 'BOT' && msg.id.startsWith('greeting-');
+
+  // Check if we should show a date separator before this message
+  const shouldShowDateSeparator = (index: number): string | null => {
+    if (index === 0) {
+      try {
+        return getDateLabel(new Date(messages[0].timestamp));
+      } catch {
+        return null;
+      }
+    }
+    try {
+      const prev = new Date(messages[index - 1].timestamp);
+      const curr = new Date(messages[index].timestamp);
+      if (!isSameDay(prev, curr)) {
+        return getDateLabel(curr);
+      }
+    } catch {
+      // ignore
+    }
+    return null;
+  };
+
   // ==================== Render ====================
+
+  const isGreeting =
+    messages.length === 1 && isGreetingMessage(messages[0]);
 
   return (
     <div
@@ -237,11 +396,14 @@ export function ChatPage() {
         marginTop: '-0.5rem',
       }}
     >
+      {/* Inline animation styles */}
+      <style>{ANIMATION_STYLES}</style>
+
       {/* Chat header */}
       <div className="flex items-center gap-3 h-12 px-4 bg-primary flex-shrink-0">
         <button
           onClick={() => navigate(-1)}
-          className="p-1 -ml-1 text-white active:bg-white/20 rounded-full"
+          className="p-1 -ml-1 text-white active:bg-white/20 rounded-full transition-colors"
         >
           <ArrowLeftIcon className="w-5 h-5" />
         </button>
@@ -249,55 +411,130 @@ export function ChatPage() {
         <h1 className="flex-1 text-body-01 font-semibold text-white truncate">
           AI Assistant
         </h1>
+        <button
+          onClick={handleNewChat}
+          className="p-1.5 text-white active:bg-white/20 rounded-full transition-colors"
+          aria-label="New chat"
+        >
+          <ArrowPathIcon className="w-5 h-5" />
+        </button>
       </div>
 
       {/* Messages area */}
       <div
-        className="flex-1 overflow-y-auto px-4 py-3 space-y-3"
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto px-4 py-3 space-y-3 relative"
         style={{ overscrollBehavior: 'contain' }}
         role="log"
         aria-live="polite"
+        onScroll={handleScroll}
       >
         {historyLoading ? (
-          <div className="flex flex-col gap-3">
-            {[0, 1, 2].map((i) => (
+          /* Skeleton loading */
+          <div
+            className="flex flex-col gap-3"
+            style={{ animation: 'fadeIn 300ms ease-out' }}
+          >
+            {[0, 1, 2, 3, 4].map((i) => (
               <div
                 key={i}
-                className={`h-10 rounded-xl bg-gray-20 animate-pulse ${
-                  i % 2 === 0 ? 'self-start w-3/4' : 'self-end w-1/2'
+                className={`rounded-xl bg-gray-20 animate-pulse ${
+                  i % 2 === 0 ? 'self-start' : 'self-end'
                 }`}
+                style={{
+                  height: i === 0 ? '3.5rem' : i === 2 ? '4rem' : '2.5rem',
+                  width: i % 2 === 0 ? '75%' : i === 3 ? '40%' : '55%',
+                }}
               />
             ))}
           </div>
+        ) : isGreeting ? (
+          /* Centered greeting state */
+          <div
+            className="flex flex-col items-center justify-center text-center px-4 pt-12"
+            style={{ animation: 'fadeInUp 400ms ease-out' }}
+          >
+            <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mb-4">
+              <SparklesIcon className="w-7 h-7 text-primary" />
+            </div>
+            <h2 className="text-heading-03 font-semibold text-gray-100 mb-2">
+              AI Assistant
+            </h2>
+            <p className="text-body-01 text-gray-60 mb-6 max-w-[280px]">
+              {INITIAL_GREETING}
+            </p>
+            {/* Suggestion chips centered */}
+            <div className="flex flex-wrap justify-center gap-2">
+              {INITIAL_SUGGESTIONS.map((suggestion, i) => (
+                <button
+                  key={suggestion}
+                  onClick={() => handleSuggestionClick(suggestion)}
+                  className="text-label-01 px-3.5 py-2 rounded-full border border-primary text-primary bg-white shadow-sm active:bg-primary active:text-white transition-colors"
+                  style={{
+                    animation: `fadeInUp 300ms ease-out ${i * 50}ms both`,
+                  }}
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          </div>
         ) : (
+          /* Message list */
           messages.map((msg, index) => {
             const isUser = msg.senderType === 'USER';
             const isLastBot =
               msg.senderType === 'BOT' && index === messages.length - 1;
+            const dateSep = shouldShowDateSeparator(index);
 
             return (
               <div key={msg.id} className="flex flex-col">
-                {/* Message bubble */}
+                {/* Date separator */}
+                {dateSep && (
+                  <div className="flex items-center gap-3 my-2">
+                    <div className="flex-1 h-px bg-gray-20" />
+                    <span className="text-helper-01 text-gray-40 whitespace-nowrap">
+                      {dateSep}
+                    </span>
+                    <div className="flex-1 h-px bg-gray-20" />
+                  </div>
+                )}
+
+                {/* Message row */}
                 <div
-                  className={`max-w-[85%] ${
-                    isUser ? 'self-end' : 'self-start'
-                  }`}
+                  className={`max-w-[85%] ${isUser ? 'self-end' : 'self-start'}`}
+                  style={{
+                    animation: isUser
+                      ? 'slideInRight 200ms ease-out'
+                      : 'slideInLeft 200ms ease-out',
+                  }}
                 >
                   {isUser ? (
                     <div className="px-3.5 py-2.5 rounded-2xl rounded-br-md bg-primary text-white text-body-01 leading-relaxed break-words">
                       {msg.content}
                     </div>
                   ) : (
-                    <div
-                      className="px-3.5 py-2.5 rounded-2xl rounded-bl-md bg-white text-gray-100 shadow-card text-body-01 leading-relaxed break-words"
-                      dangerouslySetInnerHTML={{
-                        __html: renderMarkdown(msg.content),
-                      }}
-                    />
+                    <div className="flex items-start gap-2">
+                      {/* Bot avatar */}
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center mt-0.5">
+                        <SparklesIcon className="w-3.5 h-3.5 text-primary" />
+                      </div>
+                      {/* Bot bubble */}
+                      <div
+                        className="px-3.5 py-2.5 rounded-2xl rounded-bl-md bg-white text-gray-100 shadow-card text-body-01 leading-relaxed break-words cursor-pointer active:bg-gray-10 transition-colors"
+                        dangerouslySetInnerHTML={{
+                          __html: renderMarkdown(msg.content),
+                        }}
+                        onClick={() => handleCopyMessage(msg.content)}
+                        role="button"
+                        tabIndex={0}
+                        aria-label="Copy message"
+                      />
+                    </div>
                   )}
                   <span
                     className={`text-helper-01 text-gray-40 mt-0.5 px-1 block ${
-                      isUser ? 'text-right' : ''
+                      isUser ? 'text-right' : 'pl-8'
                     }`}
                   >
                     {formatMessageTime(msg.timestamp)}
@@ -309,12 +546,15 @@ export function ChatPage() {
                   msg.suggestions &&
                   msg.suggestions.length > 0 &&
                   !sendMessageMutation.isPending && (
-                    <div className="flex flex-wrap gap-2 mt-2 self-start">
-                      {msg.suggestions.map((suggestion) => (
+                    <div className="flex flex-wrap gap-2 mt-2 pl-8 self-start">
+                      {msg.suggestions.map((suggestion, i) => (
                         <button
                           key={suggestion}
                           onClick={() => handleSuggestionClick(suggestion)}
-                          className="text-label-01 px-3 py-1.5 rounded-full border border-primary text-primary bg-white active:bg-primary active:text-white transition-colors"
+                          className="text-label-01 px-3.5 py-2 rounded-full border border-primary text-primary bg-white shadow-sm active:bg-primary active:text-white transition-colors"
+                          style={{
+                            animation: `fadeInUp 300ms ease-out ${i * 50}ms both`,
+                          }}
                         >
                           {suggestion}
                         </button>
@@ -328,36 +568,69 @@ export function ChatPage() {
 
         {/* Typing indicator */}
         {sendMessageMutation.isPending && (
-          <div className="self-start max-w-[85%]">
-            <div className="px-3.5 py-3 rounded-2xl rounded-bl-md bg-white shadow-card flex items-center gap-1.5">
-              <div className="w-2 h-2 bg-gray-40 rounded-full animate-bounce" />
-              <div
-                className="w-2 h-2 bg-gray-40 rounded-full animate-bounce"
-                style={{ animationDelay: '150ms' }}
-              />
-              <div
-                className="w-2 h-2 bg-gray-40 rounded-full animate-bounce"
-                style={{ animationDelay: '300ms' }}
-              />
+          <div
+            className="self-start max-w-[85%]"
+            style={{ animation: 'fadeInUp 200ms ease-out' }}
+          >
+            <div className="flex items-start gap-2">
+              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center mt-0.5">
+                <SparklesIcon className="w-3.5 h-3.5 text-primary" />
+              </div>
+              <div className="px-3.5 py-3 rounded-2xl rounded-bl-md bg-white shadow-card flex items-center gap-1.5">
+                {[0, 200, 400].map((delay) => (
+                  <div
+                    key={delay}
+                    className="w-1.5 h-1.5 bg-gray-40 rounded-full"
+                    style={{
+                      animation: `dotPulse 1.2s ease-in-out ${delay}ms infinite`,
+                    }}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         )}
 
-        {/* Error */}
+        {/* Error with retry */}
         {error && (
-          <div className="self-center text-label-01 text-danger bg-red-50 px-3 py-2 rounded-lg text-center">
-            {error}
-          </div>
+          <button
+            onClick={lastFailedMessage ? handleRetry : undefined}
+            className="self-center text-label-01 text-danger bg-red-50 px-4 py-2.5 rounded-lg text-center flex items-center gap-2 active:opacity-80 transition-opacity"
+            style={{ animation: 'fadeInUp 200ms ease-out' }}
+          >
+            <ArrowPathIcon className="w-4 h-4 flex-shrink-0" />
+            <span>{error}</span>
+          </button>
         )}
 
         {/* Scroll anchor */}
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Scroll-to-bottom FAB */}
+      {showScrollBtn && (
+        <button
+          onClick={scrollToBottom}
+          className="absolute right-5 bg-white shadow-card rounded-full w-9 h-9 flex items-center justify-center transition-opacity duration-200 active:scale-95"
+          style={{
+            bottom: 'calc(var(--bottom-bar-height) + var(--safe-area-bottom) + 4rem)',
+          }}
+          aria-label="Scroll to bottom"
+        >
+          <ChevronDownIcon className="w-5 h-5 text-gray-60" />
+          {newMsgCount > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-primary text-white text-[10px] font-semibold rounded-full flex items-center justify-center px-1">
+              {newMsgCount}
+            </span>
+          )}
+        </button>
+      )}
+
       {/* Input bar */}
       <div
-        className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 bg-white border-t border-gray-20"
+        className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 bg-white"
         style={{
+          boxShadow: '0 -1px 3px rgba(0,0,0,0.05)',
           paddingBottom:
             'calc(var(--bottom-bar-height) + var(--safe-area-bottom) + 0.625rem)',
         }}
@@ -371,12 +644,12 @@ export function ChatPage() {
           onKeyDown={handleKeyDown}
           disabled={sendMessageMutation.isPending}
           autoComplete="off"
-          className="flex-1 h-10 px-4 bg-gray-10 rounded-full text-body-01 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+          className="flex-1 h-10 px-4 bg-gray-10 rounded-full text-body-01 text-gray-100 placeholder:text-gray-40 focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
         />
         <button
           onClick={() => handleSend()}
           disabled={!inputValue.trim() || sendMessageMutation.isPending}
-          className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-primary rounded-full text-white disabled:opacity-40 active:bg-blue-700 transition-colors"
+          className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-primary rounded-full text-white disabled:opacity-40 active:scale-90 transition-transform"
           aria-label="Send message"
         >
           <PaperAirplaneIcon className="w-5 h-5" />
