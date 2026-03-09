@@ -31,3 +31,4 @@ export * from './service-items.queries';
 export * from './credit-notes.queries';
 export * from './fiscal-periods.queries';
 export * from './recurring.queries';
+export * from './chat.queries';

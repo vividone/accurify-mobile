@@ -24,6 +24,7 @@ import {
   ArrowTrendingUpIcon,
   DocumentMinusIcon,
   LockClosedIcon,
+  ChatBubbleLeftRightIcon,
 } from '@heroicons/react/24/outline';
 import { useUIStore } from '@/store/ui.store';
 import { useAuthStore } from '@/store/auth.store';
@@ -108,6 +109,7 @@ export function MoreMenu() {
         { label: 'Payment Settings', icon: CreditCardIcon, onClick: () => go('/app/payment-settings') },
         { label: 'Billing & Subscription', icon: SparklesIcon, onClick: () => go('/app/billing') },
         { label: 'Settings', icon: Cog6ToothIcon, onClick: () => go('/app/settings') },
+        { label: 'AI Assistant', icon: ChatBubbleLeftRightIcon, onClick: () => go('/app/chat') },
         { label: 'Help Center', icon: QuestionMarkCircleIcon, onClick: () => go('/app/help') },
         {
           label: 'Desktop Version',

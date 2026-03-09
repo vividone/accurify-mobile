@@ -65,6 +65,7 @@ import { CreditNoteDetailPage } from '@/pages/credit-notes/CreditNoteDetailPage'
 import { FiscalPeriodsPage } from '@/pages/fiscal-periods/FiscalPeriodsPage';
 import { RecurringListPage } from '@/pages/recurring/RecurringListPage';
 import { RecurringCreatePage } from '@/pages/recurring/RecurringCreatePage';
+import { ChatPage } from '@/pages/chat/ChatPage';
 
 export const router = createBrowserRouter([
   // Public auth routes
@@ -149,6 +150,7 @@ export const router = createBrowserRouter([
       { path: 'help', element: <HelpCenterPage /> },
       { path: 'help/:categoryId', element: <HelpCategoryPage /> },
       { path: 'help/:categoryId/:articleId', element: <HelpArticlePage /> },
+      { path: 'chat', element: <ChatPage /> },
     ],
   },
 

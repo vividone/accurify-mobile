@@ -32,3 +32,4 @@ export { serviceItemsApi } from './service-items.api';
 export { creditNotesApi } from './credit-notes.api';
 export { fiscalPeriodsApi } from './fiscal-periods.api';
 export { recurringApi } from './recurring.api';
+export { chatApi } from './chat.api';

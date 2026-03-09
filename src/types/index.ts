@@ -32,3 +32,4 @@ export * from './service-item.types';
 export * from './credit-note.types';
 export * from './fiscal-period.types';
 export * from './recurring.types';
+export * from './chat.types';
