@@ -33,6 +33,9 @@ export interface Invoice {
   balanceDueKobo?: number;
   createdAt: string;
   updatedAt: string;
+  // Project association
+  projectId?: string;
+  projectName?: string;
   // Proforma conversion tracking
   convertedFromId?: string;
   // Payment link fields (Accurify Pay)
@@ -66,6 +69,8 @@ export interface InvoiceRequest {
   enableAccurifyPay?: boolean;
   // Invoice type
   type?: InvoiceType;
+  // Optional project association
+  projectId?: string;
 }
 
 export interface MarkPaidRequest {

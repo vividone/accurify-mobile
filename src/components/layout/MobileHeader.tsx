@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useBusinessStore } from '@/store/business.store';
 import { useUnreadNotificationCount } from '@/queries/notification.queries';
-import { BellIcon } from '@heroicons/react/24/outline';
+import { BellIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
 import accurifyIcon from '@/assets/accurify-icon.svg';
 
 export function MobileHeader() {
@@ -24,18 +24,27 @@ export function MobileHeader() {
           </span>
         </div>
 
-        {/* Notification bell */}
-        <button
-          onClick={() => navigate('/app/notifications')}
-          className="relative p-2 -mr-2 text-gray-70 active:bg-gray-10 rounded-full"
-        >
-          <BellIcon className="w-6 h-6" />
-          {unreadCount > 0 && (
-            <span className="absolute top-1 right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-danger rounded-full">
-              {unreadCount > 99 ? '99+' : unreadCount}
-            </span>
-          )}
-        </button>
+        {/* Action buttons */}
+        <div className="flex items-center">
+          <button
+            onClick={() => navigate('/app/chat')}
+            className="relative p-2 text-gray-70 active:bg-gray-10 rounded-full"
+            aria-label="Chat assistant"
+          >
+            <ChatBubbleLeftRightIcon className="w-6 h-6" />
+          </button>
+          <button
+            onClick={() => navigate('/app/notifications')}
+            className="relative p-2 -mr-2 text-gray-70 active:bg-gray-10 rounded-full"
+          >
+            <BellIcon className="w-6 h-6" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-danger rounded-full">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
     </header>
   );

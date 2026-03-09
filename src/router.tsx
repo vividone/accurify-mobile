@@ -60,6 +60,12 @@ import { ProjectHealthPage } from '@/pages/intelligence/ProjectHealthPage';
 import { BankReconciliationPage } from '@/pages/reconciliation/BankReconciliationPage';
 import { CashFlowForecastPage } from '@/pages/reports/CashFlowForecastPage';
 import { MarginTrendPage } from '@/pages/reports/MarginTrendPage';
+import { CreditNoteListPage } from '@/pages/credit-notes/CreditNoteListPage';
+import { CreditNoteDetailPage } from '@/pages/credit-notes/CreditNoteDetailPage';
+import { FiscalPeriodsPage } from '@/pages/fiscal-periods/FiscalPeriodsPage';
+import { RecurringListPage } from '@/pages/recurring/RecurringListPage';
+import { RecurringCreatePage } from '@/pages/recurring/RecurringCreatePage';
+import { ChatPage } from '@/pages/chat/ChatPage';
 
 export const router = createBrowserRouter([
   // Public auth routes
@@ -121,6 +127,11 @@ export const router = createBrowserRouter([
       { path: 'wip', element: <ServiceRoute><WipReportPage /></ServiceRoute> },
       { path: 'milestones', element: <ServiceRoute><MilestonesPage /></ServiceRoute> },
       { path: 'project-health', element: <PremiumRoute><ServiceRoute><ProjectHealthPage /></ServiceRoute></PremiumRoute> },
+      { path: 'credit-notes', element: <PremiumRoute promptType="glFeatureLocked"><CreditNoteListPage /></PremiumRoute> },
+      { path: 'credit-notes/:id', element: <PremiumRoute promptType="glFeatureLocked"><CreditNoteDetailPage /></PremiumRoute> },
+      { path: 'fiscal-periods', element: <PremiumRoute promptType="glFeatureLocked"><FiscalPeriodsPage /></PremiumRoute> },
+      { path: 'recurring', element: <PremiumRoute promptType="glFeatureLocked"><RecurringListPage /></PremiumRoute> },
+      { path: 'recurring/new', element: <PremiumRoute promptType="glFeatureLocked"><RecurringCreatePage /></PremiumRoute> },
       { path: 'assets', element: <PremiumRoute promptType="glFeatureLocked"><AssetListPage /></PremiumRoute> },
       { path: 'notifications', element: <NotificationsPage /> },
       { path: 'settings', element: <SettingsPage /> },
@@ -139,6 +150,7 @@ export const router = createBrowserRouter([
       { path: 'help', element: <HelpCenterPage /> },
       { path: 'help/:categoryId', element: <HelpCategoryPage /> },
       { path: 'help/:categoryId/:articleId', element: <HelpArticlePage /> },
+      { path: 'chat', element: <ChatPage /> },
     ],
   },
 
