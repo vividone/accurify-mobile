@@ -6,6 +6,10 @@ import type {
   ChatMessageResponse,
   ChatSessionResponse,
   ChatMessageHistoryItem,
+  ChatFeedbackRequest,
+  ProactiveMessage,
+  AiSettingsResponse,
+  AiSettingsRequest,
 } from '@/types';
 
 const CHAT_BASE = '/chat';
@@ -42,6 +46,52 @@ export const chatApi = {
   ): Promise<ChatMessageHistoryItem[]> => {
     const response = await apiClient.get<ApiResponse<ChatMessageHistoryItem[]>>(
       `${CHAT_BASE}/sessions/${sessionId}/messages`
+    );
+    return response.data.data!;
+  },
+
+  /** Submit feedback on a bot message. POST /api/v1/chat/messages/{messageId}/feedback */
+  submitFeedback: async (
+    messageId: string,
+    data: ChatFeedbackRequest
+  ): Promise<void> => {
+    await apiClient.post<ApiResponse<unknown>>(
+      `${CHAT_BASE}/messages/${messageId}/feedback`,
+      data
+    );
+  },
+
+  /** Get pending proactive messages. GET /api/v1/chat/proactive */
+  getProactiveMessages: async (): Promise<ProactiveMessage[]> => {
+    const response = await apiClient.get<ApiResponse<ProactiveMessage[]>>(
+      `${CHAT_BASE}/proactive`
+    );
+    return response.data.data ?? [];
+  },
+
+  /** Dismiss a proactive message. PUT /api/v1/chat/proactive/{id}/dismiss */
+  dismissProactiveMessage: async (messageId: string): Promise<void> => {
+    await apiClient.put(`${CHAT_BASE}/proactive/${messageId}/dismiss`);
+  },
+
+  /** Mark proactive message as acted on. PUT /api/v1/chat/proactive/{id}/acted */
+  markProactiveActedOn: async (messageId: string): Promise<void> => {
+    await apiClient.put(`${CHAT_BASE}/proactive/${messageId}/acted`);
+  },
+
+  /** Get AI settings. GET /api/v1/chat/settings/ai */
+  getAiSettings: async (): Promise<AiSettingsResponse> => {
+    const response = await apiClient.get<ApiResponse<AiSettingsResponse>>(
+      `${CHAT_BASE}/settings/ai`
+    );
+    return response.data.data!;
+  },
+
+  /** Update AI settings. PUT /api/v1/chat/settings/ai */
+  updateAiSettings: async (data: AiSettingsRequest): Promise<AiSettingsResponse> => {
+    const response = await apiClient.put<ApiResponse<AiSettingsResponse>>(
+      `${CHAT_BASE}/settings/ai`,
+      data
     );
     return response.data.data!;
   },

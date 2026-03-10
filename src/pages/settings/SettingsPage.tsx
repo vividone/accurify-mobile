@@ -22,7 +22,9 @@ import {
   PhotoIcon,
   LockClosedIcon,
   DocumentTextIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/outline';
+import { useAiSettings, useUpdateAiSettings } from '@/queries/chat.queries';
 
 const MONTHS = [
   { value: 1, label: 'January' },
@@ -51,6 +53,11 @@ export function SettingsPage() {
   const [showBusiness, setShowBusiness] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
+  const [showAiSettings, setShowAiSettings] = useState(false);
+
+  // AI settings
+  const { data: aiSettings } = useAiSettings();
+  const updateAiMutation = useUpdateAiSettings();
 
   // Business form state
   const [businessForm, setBusinessForm] = useState({
@@ -483,6 +490,112 @@ export function SettingsPage() {
               >
                 {isSavingInvoice ? 'Saving...' : 'Save Invoice Settings'}
               </button>
+            </div>
+          )}
+        </Card>
+
+        {/* AI Assistant Settings - Collapsible */}
+        <Card padding={false}>
+          <button
+            onClick={() => setShowAiSettings(!showAiSettings)}
+            className="flex items-center gap-3 w-full px-4 py-3"
+          >
+            <SparklesIcon className="w-5 h-5 text-gray-50" />
+            <div className="flex-1 text-left">
+              <span className="text-body-01 text-gray-100">AI Assistant</span>
+              <p className="text-helper-01 text-gray-40">Proactive insights and learning</p>
+            </div>
+            <ChevronDownIcon className={`w-4 h-4 text-gray-40 transition-transform ${showAiSettings ? 'rotate-180' : ''}`} />
+          </button>
+          {showAiSettings && aiSettings && (
+            <div className="px-4 pb-4 space-y-4 border-t border-gray-10 pt-3">
+              {/* Learning status */}
+              <div className="bg-blue-50/50 rounded-lg p-3 space-y-1">
+                <p className="text-label-01 font-medium text-gray-100">Learning Status</p>
+                <div className="flex items-center justify-between text-helper-01 text-gray-60">
+                  <span>Learned rules</span>
+                  <span className="font-medium text-primary">{aiSettings.learnedRules}</span>
+                </div>
+                <div className="flex items-center justify-between text-helper-01 text-gray-60">
+                  <span>Feedback given</span>
+                  <span className="font-medium">{aiSettings.totalFeedbackGiven}</span>
+                </div>
+              </div>
+
+              {/* Proactive insights toggle */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-body-01 text-gray-100">Proactive insights</p>
+                  <p className="text-helper-01 text-gray-40">Get alerts and recommendations</p>
+                </div>
+                <button
+                  onClick={() => updateAiMutation.mutate({ proactiveEnabled: !aiSettings.proactiveEnabled })}
+                  className={`relative w-11 h-6 rounded-full transition-colors ${
+                    aiSettings.proactiveEnabled ? 'bg-primary' : 'bg-gray-30'
+                  }`}
+                >
+                  <div
+                    className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                      aiSettings.proactiveEnabled ? 'translate-x-[22px]' : 'translate-x-0.5'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Feedback visible toggle */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-body-01 text-gray-100">Feedback buttons</p>
+                  <p className="text-helper-01 text-gray-40">Show thumbs up/down on responses</p>
+                </div>
+                <button
+                  onClick={() => updateAiMutation.mutate({ feedbackVisible: !aiSettings.feedbackVisible })}
+                  className={`relative w-11 h-6 rounded-full transition-colors ${
+                    aiSettings.feedbackVisible ? 'bg-primary' : 'bg-gray-30'
+                  }`}
+                >
+                  <div
+                    className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                      aiSettings.feedbackVisible ? 'translate-x-[22px]' : 'translate-x-0.5'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Insight frequency */}
+              <div>
+                <label className="block text-label-01 text-gray-70 mb-1.5">Insight Frequency</label>
+                <select
+                  value={aiSettings.proactiveFrequency || 'DAILY'}
+                  onChange={(e) => updateAiMutation.mutate({ proactiveFrequency: e.target.value })}
+                  className={inputClass}
+                >
+                  <option value="DAILY">Daily</option>
+                  <option value="WEEKLY">Weekly</option>
+                  <option value="REAL_TIME">Real-time</option>
+                </select>
+              </div>
+
+              {/* Custom instructions */}
+              <div>
+                <label className="block text-label-01 text-gray-70 mb-1.5">
+                  Custom Instructions
+                  <span className="text-gray-40 font-normal"> (optional)</span>
+                </label>
+                <textarea
+                  value={aiSettings.customInstructions || ''}
+                  onChange={(e) => {
+                    const val = e.target.value.slice(0, 500);
+                    updateAiMutation.mutate({ customInstructions: val });
+                  }}
+                  className={`${inputClass} h-24 py-3 resize-none`}
+                  placeholder='e.g. "Always respond in Pidgin English", "PO means Purchase Order"'
+                  maxLength={500}
+                />
+                <p className="text-helper-01 text-gray-40 mt-1 text-right">
+                  {(aiSettings.customInstructions || '').length}/500
+                </p>
+              </div>
             </div>
           )}
         </Card>
