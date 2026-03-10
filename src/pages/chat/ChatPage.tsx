@@ -5,11 +5,14 @@ import {
   PaperAirplaneIcon,
   ArrowPathIcon,
   ChevronDownIcon,
+  HandThumbUpIcon,
+  HandThumbDownIcon,
 } from '@heroicons/react/24/outline';
 import { SparklesIcon } from '@heroicons/react/24/solid';
-import { useChatSessionMessages, useSendChatMessage } from '@/queries/chat.queries';
+import { XMarkIcon } from '@heroicons/react/24/outline';
+import { useChatSessionMessages, useSendChatMessage, useSubmitChatFeedback, useProactiveMessages, useDismissProactiveMessage } from '@/queries/chat.queries';
 import { useUIStore } from '@/store/ui.store';
-import type { ChatMessage, ChatMessageRequest } from '@/types';
+import type { ChatMessage, ChatMessageRequest, FeedbackRating, ProactiveMessage } from '@/types';
 
 // ==================== Constants ====================
 
@@ -162,10 +165,64 @@ export function ChatPage() {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Proactive messages state
+  const [dismissedCards, setDismissedCards] = useState<Set<string>>(new Set());
+
   // React Query
   const { data: historyMessages, isLoading: historyLoading } =
     useChatSessionMessages(sessionId);
   const sendMessageMutation = useSendChatMessage();
+  const feedbackMutation = useSubmitChatFeedback();
+  const { data: proactiveMessages } = useProactiveMessages();
+  const dismissMutation = useDismissProactiveMessage();
+
+  // Visible proactive cards (not dismissed locally)
+  const visibleProactiveCards = (proactiveMessages ?? []).filter(
+    (m: ProactiveMessage) => !dismissedCards.has(m.id)
+  );
+
+  const handleDismissCard = useCallback(
+    (msgId: string) => {
+      setDismissedCards((prev) => new Set(prev).add(msgId));
+      dismissMutation.mutate(msgId);
+    },
+    [dismissMutation]
+  );
+
+  // Feedback handler
+  const handleFeedback = useCallback(
+    (messageId: string, rating: FeedbackRating) => {
+      // Skip for local/greeting messages
+      if (messageId.startsWith('greeting-')) return;
+
+      // Optimistic update
+      setMessages((prev) =>
+        prev.map((m) => (m.id === messageId ? { ...m, feedbackRating: rating } : m))
+      );
+
+      feedbackMutation.mutate(
+        { messageId, feedback: { rating } },
+        {
+          onSuccess: () => {
+            showNotification(
+              'Thanks',
+              rating === 'POSITIVE' ? 'Glad that helped!' : 'Thanks for the feedback',
+              'success'
+            );
+          },
+          onError: () => {
+            // Revert optimistic update
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === messageId ? { ...m, feedbackRating: undefined } : m
+              )
+            );
+          },
+        }
+      );
+    },
+    [feedbackMutation, showNotification]
+  );
 
   // Determine if user is near bottom of the scroll container
   const isNearBottom = useCallback((): boolean => {
@@ -420,6 +477,45 @@ export function ChatPage() {
         </button>
       </div>
 
+      {/* Proactive insight cards */}
+      {visibleProactiveCards.length > 0 && (
+        <div className="flex-shrink-0 px-4 py-2 space-y-2 bg-gray-10/80">
+          {visibleProactiveCards.slice(0, 3).map((card: ProactiveMessage) => {
+            const accent =
+              card.messageType === 'ALERT'
+                ? 'border-l-red-500 bg-red-50/50'
+                : card.messageType === 'REMINDER'
+                  ? 'border-l-amber-500 bg-amber-50/50'
+                  : card.messageType === 'INSIGHT'
+                    ? 'border-l-green-500 bg-green-50/50'
+                    : 'border-l-blue-500 bg-blue-50/50';
+            return (
+              <div
+                key={card.id}
+                className={`rounded-lg border-l-4 ${accent} p-3 flex items-start gap-2`}
+                style={{ animation: 'fadeInUp 300ms ease-out' }}
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-label-01 font-semibold text-gray-100 truncate">
+                    {card.title}
+                  </p>
+                  <p className="text-helper-01 text-gray-60 mt-0.5 line-clamp-2">
+                    {card.content}
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleDismissCard(card.id)}
+                  className="flex-shrink-0 p-1 text-gray-40 active:text-gray-60 rounded-full"
+                  aria-label="Dismiss"
+                >
+                  <XMarkIcon className="w-4 h-4" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {/* Messages area */}
       <div
         ref={messagesContainerRef}
@@ -532,13 +628,50 @@ export function ChatPage() {
                       />
                     </div>
                   )}
-                  <span
-                    className={`text-helper-01 text-gray-40 mt-0.5 px-1 block ${
-                      isUser ? 'text-right' : 'pl-8'
+                  <div
+                    className={`flex items-center gap-1.5 mt-0.5 px-1 ${
+                      isUser ? 'justify-end' : 'pl-8'
                     }`}
                   >
-                    {formatMessageTime(msg.timestamp)}
-                  </span>
+                    <span className="text-helper-01 text-gray-40">
+                      {formatMessageTime(msg.timestamp)}
+                    </span>
+                    {/* Feedback buttons — bot messages only, not greeting */}
+                    {!isUser && !msg.id.startsWith('greeting-') && (
+                      <span className="flex items-center gap-0.5 ml-1">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleFeedback(msg.id, 'POSITIVE');
+                          }}
+                          disabled={!!msg.feedbackRating}
+                          className={`p-1 rounded-full transition-colors ${
+                            msg.feedbackRating === 'POSITIVE'
+                              ? 'text-green-600'
+                              : 'text-gray-30 active:text-green-600'
+                          } disabled:opacity-60`}
+                          aria-label="Helpful"
+                        >
+                          <HandThumbUpIcon className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleFeedback(msg.id, 'NEGATIVE');
+                          }}
+                          disabled={!!msg.feedbackRating}
+                          className={`p-1 rounded-full transition-colors ${
+                            msg.feedbackRating === 'NEGATIVE'
+                              ? 'text-red-500'
+                              : 'text-gray-30 active:text-red-500'
+                          } disabled:opacity-60`}
+                          aria-label="Not helpful"
+                        >
+                          <HandThumbDownIcon className="w-3.5 h-3.5" />
+                        </button>
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Suggestion chips - only on last bot message, hidden while loading */}

@@ -92,4 +92,49 @@ export interface ChatMessage {
   suggestions?: string[];
   actionResult?: Record<string, unknown>;
   timestamp: string;
+  feedbackRating?: FeedbackRating;
+}
+
+export type FeedbackRating = 'POSITIVE' | 'NEGATIVE';
+
+export interface ChatFeedbackRequest {
+  rating: FeedbackRating;
+  correctedIntent?: ChatIntent;
+  feedbackText?: string;
+}
+
+// Proactive Messages
+export type ProactiveMessageType = 'INSIGHT' | 'ALERT' | 'REMINDER' | 'RECOMMENDATION';
+export type ProactiveMessageStatus = 'PENDING' | 'DELIVERED' | 'DISMISSED' | 'ACTED_ON';
+export type MessagePriority = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+
+export interface ProactiveMessage {
+  id: string;
+  messageType: ProactiveMessageType;
+  title: string;
+  content: string;
+  priority: MessagePriority;
+  status: ProactiveMessageStatus;
+  createdAt: string;
+}
+
+// AI Settings
+export interface AiSettingsResponse {
+  proactiveEnabled: boolean;
+  proactiveChannels: string | null;
+  proactiveFrequency: string | null;
+  feedbackVisible: boolean;
+  customInstructions: string | null;
+  learnedRules: number;
+  totalFeedbackGiven: number;
+  positiveFeedback: number;
+  negativeFeedback: number;
+}
+
+export interface AiSettingsRequest {
+  proactiveEnabled?: boolean;
+  proactiveChannels?: string;
+  proactiveFrequency?: string;
+  feedbackVisible?: boolean;
+  customInstructions?: string;
 }
