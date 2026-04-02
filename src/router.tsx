@@ -35,6 +35,7 @@ import { StoreDashboardPage } from '@/pages/store/StoreDashboardPage';
 import { AssetListPage } from '@/pages/assets/AssetListPage';
 import { NotificationsPage } from '@/pages/notifications/NotificationsPage';
 import { SettingsPage } from '@/pages/settings/SettingsPage';
+import { TeamPage } from '@/pages/settings/TeamPage';
 import { HelpCenterPage } from '@/pages/help/HelpCenterPage';
 import { HelpCategoryPage } from '@/pages/help/HelpCategoryPage';
 import { HelpArticlePage } from '@/pages/help/HelpArticlePage';
@@ -135,6 +136,7 @@ export const router = createBrowserRouter([
       { path: 'assets', element: <PremiumRoute promptType="glFeatureLocked"><AssetListPage /></PremiumRoute> },
       { path: 'notifications', element: <NotificationsPage /> },
       { path: 'settings', element: <SettingsPage /> },
+      { path: 'settings/team', element: <TeamPage /> },
       { path: 'transactions', element: <TransactionsPage /> },
       { path: 'transactions/new', element: <TransactionCreatePage /> },
       { path: 'income-statement', element: <IncomeStatementPage /> },

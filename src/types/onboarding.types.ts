@@ -6,11 +6,22 @@ export type OnboardingGoal =
   | 'SELL_ONLINE'
   | 'MANAGE_PROJECTS';
 
+export type ActionPriority = 'URGENT' | 'MONEY' | 'GROWTH' | 'SETUP' | 'ENGAGEMENT';
+
 export interface NextBestAction {
   title: string;
   description: string;
   actionLabel: string;
   actionPath: string;
+  priority?: ActionPriority;
+  actionKey?: string;
+  badgeColor?: string;
+}
+
+export interface MilestoneItem {
+  key: string;
+  label: string;
+  achievedAt?: string;
 }
 
 export interface OnboardingStatus {
@@ -25,4 +36,5 @@ export interface OnboardingStatus {
   isComplete: boolean;
   businessGoal: OnboardingGoal | null;
   nextBestAction: NextBestAction | null;
+  milestones?: MilestoneItem[];
 }

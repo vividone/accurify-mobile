@@ -324,6 +324,21 @@ export enum UserRole {
   ACCOUNTANT = 'ACCOUNTANT',
 }
 
+export enum PlatformRole {
+  SUPER_ADMIN = 'SUPER_ADMIN',
+  HQ_ADMIN = 'HQ_ADMIN',
+  MARKETPLACE_ACCOUNTANT = 'MARKETPLACE_ACCOUNTANT',
+  BUSINESS_USER = 'BUSINESS_USER',
+}
+
+export enum BusinessRole {
+  OWNER = 'OWNER',
+  ADMIN = 'ADMIN',
+  BOOKKEEPER = 'BOOKKEEPER',
+  STORE_OPERATOR = 'STORE_OPERATOR',
+  VIEW_ONLY = 'VIEW_ONLY',
+}
+
 // Credit note status
 export enum CreditNoteStatus {
   DRAFT = 'DRAFT',

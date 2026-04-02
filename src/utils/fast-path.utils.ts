@@ -1,4 +1,4 @@
-export type FastPathFlow = 'invoice' | 'bookkeeping' | 'tax' | 'quickstore';
+export type FastPathFlow = 'invoice' | 'bookkeeping' | 'tax' | 'quickstore' | 'project';
 
 export function isFastPathCompleted(businessId: string, flow: FastPathFlow): boolean {
   try {
