@@ -31,10 +31,21 @@ export type NotificationType =
   | 'INVOICE_RECEIVED'
   | 'INVOICE_PAID'
   | 'INVOICE_OVERDUE'
+  | 'NEW_STORE_ORDER'
+  | 'ORDER_UPDATE'
   | 'NEW_USER_REGISTERED'
   | 'NEW_BUSINESS_CREATED'
   | 'KYC_PENDING_REVIEW'
-  | 'VETTING_PENDING_REVIEW';
+  | 'VETTING_PENDING_REVIEW'
+  // Banking
+  | 'BANK_REAUTH_REQUIRED'
+  | 'BANK_ACCOUNT_UNLINKED'
+  // Intelligence alerts
+  | 'MARGIN_ALERT'
+  | 'CASH_FLOW_WARNING'
+  | 'ANOMALY_DETECTED'
+  | 'INSIGHT_GENERATED'
+  | 'RULE_AUTO_CREATED';
 
 /**
  * Broadcast target audience.
@@ -170,10 +181,21 @@ export const notificationTypeConfig: Record<
   INVOICE_RECEIVED: { icon: 'document', color: 'blue' },
   INVOICE_PAID: { icon: 'checkmark--filled', color: 'green' },
   INVOICE_OVERDUE: { icon: 'warning--alt', color: 'red' },
+  NEW_STORE_ORDER: { icon: 'shopping-cart', color: 'blue' },
+  ORDER_UPDATE: { icon: 'delivery', color: 'cyan' },
   NEW_USER_REGISTERED: { icon: 'user--avatar', color: 'blue' },
   NEW_BUSINESS_CREATED: { icon: 'building', color: 'blue' },
   KYC_PENDING_REVIEW: { icon: 'pending', color: 'orange' },
   VETTING_PENDING_REVIEW: { icon: 'pending', color: 'orange' },
+  // Banking
+  BANK_REAUTH_REQUIRED: { icon: 'warning--alt', color: 'orange' },
+  BANK_ACCOUNT_UNLINKED: { icon: 'warning--filled', color: 'gray' },
+  // Intelligence alerts
+  MARGIN_ALERT: { icon: 'chart--line', color: 'orange' },
+  CASH_FLOW_WARNING: { icon: 'warning--alt', color: 'orange' },
+  ANOMALY_DETECTED: { icon: 'error--filled', color: 'red' },
+  INSIGHT_GENERATED: { icon: 'idea', color: 'cyan' },
+  RULE_AUTO_CREATED: { icon: 'task--settings', color: 'green' },
 };
 
 /**

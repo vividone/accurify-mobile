@@ -46,6 +46,9 @@ export interface ProjectRequest {
   startDate?: string;
   endDate?: string;
   color?: string;
+  billingModel?: string;
+  contractValue?: number;
+  estimatedCost?: number;
 }
 
 export interface BudgetLineItem {

@@ -19,6 +19,9 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 import { InvoiceFastPathWizard } from '@/components/onboarding/wizards/InvoiceFastPathWizard';
 import { BookkeepingFastPathWizard } from '@/components/onboarding/wizards/BookkeepingFastPathWizard';
 import { TaxFastPathWizard } from '@/components/onboarding/wizards/TaxFastPathWizard';
+import { QuickStoreFastPathWizard } from '@/components/onboarding/wizards/QuickStoreFastPathWizard';
+import { ProjectFastPathWizard } from '@/components/onboarding/wizards/ProjectFastPathWizard';
+import { SmartActionCard } from '@/components/dashboard/SmartActionCard';
 import type { FastPathFlow } from '@/utils/fast-path.utils';
 import type { OnboardingGoal } from '@/types/onboarding.types';
 import {
@@ -196,19 +199,10 @@ export function DashboardPage() {
       setOpenWizard('bookkeeping');
     } else if (goal === 'MANAGE_TAXES') {
       setOpenWizard('tax');
-    }
-  };
-
-  const handleGetStartedBanner = () => {
-    const goal = onboardingStatus?.businessGoal;
-    if (goal === 'SEND_INVOICES') {
-      setOpenWizard('invoice');
-    } else if (goal === 'TRACK_EXPENSES' || goal === 'FULL_ACCOUNTING') {
-      setOpenWizard('bookkeeping');
-    } else if (goal === 'MANAGE_TAXES') {
-      setOpenWizard('tax');
-    } else {
-      setGoalSheetOpen(true);
+    } else if (goal === 'SELL_ONLINE') {
+      setOpenWizard('quickstore');
+    } else if (goal === 'MANAGE_PROJECTS') {
+      setOpenWizard('project');
     }
   };
 
@@ -312,23 +306,8 @@ export function DashboardPage() {
     <div className="page-content space-y-5" ref={containerRef}>
       <PullIndicator />
 
-      {/* Onboarding Setup Banner */}
-      {onboardingStatus && !onboardingStatus.isComplete && (
-        <div className="bg-blue-50 rounded-xl p-4 flex items-center justify-between">
-          <div>
-            <p className="text-body-01 font-medium text-blue-800">Complete your setup</p>
-            <p className="text-helper-01 text-blue-600">
-              {onboardingStatus.completedSteps}/{onboardingStatus.totalSteps} steps done
-            </p>
-          </div>
-          <button
-            onClick={handleGetStartedBanner}
-            className="text-body-01 font-medium text-blue-700 whitespace-nowrap"
-          >
-            Get started →
-          </button>
-        </div>
-      )}
+      {/* Smart Action Card — permanent NBA with priority + dismiss */}
+      <SmartActionCard />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 gap-3">
@@ -533,6 +512,14 @@ export function DashboardPage() {
       />
       <TaxFastPathWizard
         open={openWizard === 'tax'}
+        onClose={() => setOpenWizard(null)}
+      />
+      <QuickStoreFastPathWizard
+        open={openWizard === 'quickstore'}
+        onClose={() => setOpenWizard(null)}
+      />
+      <ProjectFastPathWizard
+        open={openWizard === 'project'}
         onClose={() => setOpenWizard(null)}
       />
     </div>

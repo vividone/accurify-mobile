@@ -6,6 +6,7 @@ export interface User {
   firstName?: string;
   lastName?: string;
   role: UserRole;
+  platformRole?: string;
   emailVerified: boolean;
   hasCompletedOnboarding: boolean;
   createdAt: string;
