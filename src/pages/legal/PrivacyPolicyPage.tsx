@@ -30,7 +30,7 @@ export function PrivacyPolicyPage() {
             <strong>Version:</strong> 1.0 &middot; <strong>Effective:</strong> February 1, 2026
           </p>
           <p className="text-helper-01 text-gray-50 mt-1">
-            Accurify Ltd, a subsidiary of Fortbridge Technologies Ltd.
+            Accurify Ltd.
           </p>
         </div>
 

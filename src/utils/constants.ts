@@ -91,8 +91,8 @@ export const NIGERIAN_BANKS = [
 
 // Company/Brand information (from environment)
 export const COMPANY_INFO = {
-  NAME: import.meta.env.VITE_COMPANY_NAME || 'Fortbridge Technologies Ltd',
-  URL: import.meta.env.VITE_COMPANY_URL || 'https://fortbridge.co',
+  NAME: import.meta.env.VITE_COMPANY_NAME || 'Accurify Ltd',
+  URL: import.meta.env.VITE_COMPANY_URL || 'https://accurify.co',
   PRODUCT_URL: import.meta.env.VITE_PRODUCT_URL || 'https://accura.com.ng',
   SUPPORT_EMAIL: import.meta.env.VITE_SUPPORT_EMAIL || 'support@accura.com.ng',
   MARKETING_URL: import.meta.env.VITE_MARKETING_URL || 'http://localhost:3000',

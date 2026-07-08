@@ -103,7 +103,7 @@ export function TermsOfServicePage() {
             <ul className="list-disc pl-5 space-y-2">
               <li>
                 <strong>Our IP:</strong> Accurify, its code, logo, and AI algorithms remain the
-                exclusive property of Accurify Ltd and its parent, Fortbridge Technologies Ltd.
+                exclusive property of Accurify Ltd.
               </li>
               <li>
                 <strong>Your Data:</strong> You retain ownership of your financial data. You grant us a
