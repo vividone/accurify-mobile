@@ -98,7 +98,7 @@ export function InvoiceDetailPage() {
               <div
                 className="bg-success h-2 rounded-full"
                 style={{
-                  width: `${Math.min(100, ((invoice.amountPaidKobo ?? 0) / invoice.total) * 100)}%`,
+                  width: `${Math.min(100, ((invoice.amountPaidKobo ?? 0) / ((invoice.amountPaidKobo ?? 0) + invoice.balanceDueKobo || 1)) * 100)}%`,
                 }}
               />
             </div>
