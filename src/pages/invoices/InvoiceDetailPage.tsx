@@ -7,6 +7,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge';
 import { DashboardSkeleton } from '@/components/ui/Skeleton';
 import { RecordPaymentSheet } from '@/components/invoices/RecordPaymentSheet';
 import { formatCurrency } from '@/utils/currency';
+import { formatRate, invoiceDeductions, selfRemittedWht } from '@/utils/invoice-totals';
 import { formatDate } from '@/utils/date';
 import { InvoiceStatus, InvoiceType } from '@/types';
 import { useUIStore } from '@/store/ui.store';
@@ -33,6 +34,11 @@ export function InvoiceDetailPage() {
   if (isLoading || !invoice) {
     return <DashboardSkeleton />;
   }
+
+  const deductions = invoiceDeductions(invoice);
+  const hasDeductions = deductions.wht > 0 || deductions.vat > 0;
+  const netPayable = invoice.netCashPayable ?? deductions.gross - deductions.wht - deductions.vat;
+  const whtWeRemit = selfRemittedWht(invoice);
 
   const handleAction = async (action: string, fn: () => Promise<unknown>) => {
     setActionLoading(action);
@@ -71,7 +77,7 @@ export function InvoiceDetailPage() {
             </span>
           </div>
           <p className="text-heading-04 tabular-nums text-gray-100 mb-1">
-            {formatCurrency(invoice.total)}
+            {formatCurrency(netPayable)}
           </p>
           <p className="text-body-01 text-gray-50">
             Due {formatDate(invoice.dueDate)}
@@ -144,20 +150,40 @@ export function InvoiceDetailPage() {
             </div>
             {invoice.vatAmount > 0 && (
               <div className="flex justify-between text-body-01 mt-1">
-                <span className="text-gray-50">VAT ({invoice.vatRate}%)</span>
+                <span className="text-gray-50">VAT ({formatRate(invoice.vatRate)})</span>
                 <span className="tabular-nums">{formatCurrency(invoice.vatAmount)}</span>
               </div>
             )}
-            {invoice.whtAmount && invoice.whtAmount > 0 && (
+            {hasDeductions && (
+              <div className="flex justify-between text-body-01 mt-2 pt-2 border-t border-gray-20 font-medium">
+                <span>Invoice total</span>
+                <span className="tabular-nums">{formatCurrency(deductions.gross)}</span>
+              </div>
+            )}
+            {deductions.wht > 0 && (
               <div className="flex justify-between text-body-01 mt-1">
-                <span className="text-gray-50">WHT ({invoice.whtRate}%)</span>
-                <span className="tabular-nums text-danger">-{formatCurrency(invoice.whtAmount)}</span>
+                <span className="text-gray-50">Less WHT ({formatRate(invoice.whtRate ?? 0)})</span>
+                <span className="tabular-nums text-danger">-{formatCurrency(deductions.wht)}</span>
+              </div>
+            )}
+            {deductions.vat > 0 && (
+              <div className="flex justify-between text-body-01 mt-1">
+                <span className="text-gray-50">
+                  Less VAT withheld{invoice.vatWithholdingRate != null && ` (${formatRate(invoice.vatWithholdingRate)} of subtotal)`}
+                </span>
+                <span className="tabular-nums text-danger">-{formatCurrency(deductions.vat)}</span>
               </div>
             )}
             <div className="flex justify-between text-heading-02 mt-2 pt-2 border-t border-gray-20">
-              <span>Total</span>
-              <span className="tabular-nums">{formatCurrency(invoice.total)}</span>
+              <span>{hasDeductions ? 'Net payable' : 'Total'}</span>
+              <span className="tabular-nums">{formatCurrency(netPayable)}</span>
             </div>
+            {whtWeRemit > 0 && (
+              <p className="text-helper-01 text-gray-50 mt-2" data-testid="wht-self-remitted-note">
+                This client doesn’t deduct WHT — you remit {formatCurrency(whtWeRemit)} to FIRS yourself. It counts
+                as a credit against your income tax.
+              </p>
+            )}
           </div>
         </Card>
 
@@ -364,9 +390,7 @@ export function InvoiceDetailPage() {
       <RecordPaymentSheet
         open={recordPaymentOpen}
         onClose={() => setRecordPaymentOpen(false)}
-        invoiceId={invoice.id}
-        invoiceTotal={invoice.total}
-        balanceDue={invoice.balanceDueKobo !== undefined ? invoice.balanceDueKobo / 100 : invoice.total}
+        invoice={invoice}
       />
     </>
   );

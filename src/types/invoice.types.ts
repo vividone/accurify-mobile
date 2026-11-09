@@ -23,12 +23,23 @@ export interface Invoice {
   whtApplicable?: boolean;
   whtRate?: number;
   whtAmount?: number;
-  total: number; // subtotal + vatAmount - whtAmount (net receivable)
+  total: number; // subtotal + vatAmount - WHT the client deducts
+  /** Client keeps (some of) the VAT and remits it to FIRS (oil & gas, government) */
+  vatWithheldByClient?: boolean;
+  vatWithholdingRate?: number | null; // Share of subtotal withheld as VAT; null = full VAT
+  clientWithheldVat?: number;
+  /** Client doesn't deduct WHT; the business remits it (total then excludes no WHT) */
+  whtSelfRemitted?: boolean;
+  netCashPayable?: number; // What the client pays in cash
   notes?: string;
   items: InvoiceItem[];
   sentAt?: string;
   paidAt?: string;
-  // Partial payment tracking
+  // Partial payment tracking. Payments settle against the gross (subtotal + VAT):
+  // cash + WHT + VAT withheld by the client.
+  grossAmount?: number;
+  amountPaid?: number;
+  balanceDue?: number;
   amountPaidKobo?: number;
   balanceDueKobo?: number;
   createdAt: string;
@@ -80,6 +91,7 @@ export interface MarkPaidRequest {
 export interface RecordPaymentRequest {
   amountKobo: number;
   whtAmountKobo?: number;
+  vatWithheldKobo?: number;
   paymentDate: string;
   paymentMethod?: string;
   reference?: string;
